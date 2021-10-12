@@ -1,18 +1,32 @@
-## Getting Started
+- Command-line compile.  In the mnkgame/ directory run::
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+		javac -cp ".." *.java
 
-## Folder Structure
 
-The workspace contains two folders by default, where:
+MNKGame application:
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+- Human vs Computer.  In the mnkgame/ directory run:
+	
+		java -cp ".." mnkgame.MNKGame 3 3 3 mnkgame.RandomPlayer
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+- Computer vs Computer. In the mnkgame/ directory run:
 
-## Dependency Management
+		java -cp ".." mnkgame.MNKGame 5 5 4 mnkgame.RandomPlayer mnkgame.QuasiRandomPlayer
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+
+MNKPlayerTester application:
+
+- Output score only:
+
+	java -cp ".." mnkgame.MNKPlayerTester 5 5 4 mnkgame.RandomPlayer mnkgame.QuasiRandomPlayer
+
+- Verbose output
+
+	java -cp ".." mnkgame.MNKPlayerTester 5 5 4 mnkgame.RandomPlayer mnkgame.QuasiRandomPlayer -v
+
+
+- Verbose output and customized timeout (1 sec) and number of game repetitions (10 rounds)
+
+
+	java -cp ".." mnkgame.MNKPlayerTester 5 5 4 mnkgame.RandomPlayer mnkgame.QuasiRandomPlayer -v -t 1 -r 10
