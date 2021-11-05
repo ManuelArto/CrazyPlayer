@@ -1,14 +1,13 @@
 package mnkgame;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AlphaBetaPruningPlayer implements MNKPlayer {
+	private Heuristic heuristic;
 	private MNKBoard board;
 	private MNKGameState myWin, yourWin;
 	
 	@Override
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
+		heuristic = new Heuristic();
 		board = new MNKBoard(M, N, K);
 		myWin = first ? MNKGameState.WINP1 : MNKGameState.WINP2;
 		yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
@@ -28,9 +27,11 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 		if (FC.length == 1)
 			return FC[0];
 
+		// ALPHABETA
 		MNKCell bestCell = null;
 		float bestEval = Float.NEGATIVE_INFINITY;
 		int depth = 0;
+		// CELLE ORDINATE
 		for(MNKCell cell: FC) {
 			board.markCell(cell.i, cell.j);
 			float moveEval = alphabeta(board, true, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, depth);
@@ -49,11 +50,22 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 
 	private float alphabeta (MNKBoard board, boolean myTurn, float a, float b, int depth) {
 		MNKCell FC[] = board.getFreeCells();
-		
+
+		// float estimate = (Valutazione tramite euristiche sulla board e celle libere)
+
+		/*
+		if (estimate +- inf)
+			situazione vantaggiosa/svantaggiosa totale
+			return LARGE - depth;
+		 */
+
 		if (FC.length ==  0 || board.gameState() != MNKGameState.OPEN)
-			return evaluate(board, depth);
+			return evaluate(board, depth);	// return estimate
+
+		// salva estimate per ogni configurazione board
 
 		if (myTurn) {
+			// sort decrescendo
 			for (MNKCell cell : FC) {
 				board.markCell(cell.i, cell.j);
 				float eval = alphabeta(board, false, a, b, depth++);
@@ -64,6 +76,7 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 			}
 			return b;
 		} else {
+			// sort crescendo
 			for (MNKCell cell : FC) {
 				board.markCell(cell.i, cell.j);
 				float eval = alphabeta(board, true, a, b, depth++);
