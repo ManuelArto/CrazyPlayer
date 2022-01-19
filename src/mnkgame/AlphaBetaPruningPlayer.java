@@ -4,10 +4,12 @@ import java.util.Comparator;
 import java.util.TreeSet;
 
 public class AlphaBetaPruningPlayer implements MNKPlayer {
-	private Heuristics heuristics;
+	private AIHelper AIHelper;
+	private int M, N, K;
 	private MNKBoard board;
 	private Comparator<MNKCellHeuristic> cresc;
 	private Comparator<MNKCellHeuristic> decresc;
+	private long start;
 
 	private class MNKCellHeuristic extends MNKCell {
 		double estimate;
@@ -19,7 +21,10 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 
 	@Override
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
-		heuristics = new Heuristics(M, N, K, first, timeout_in_secs);
+		this.M = M;
+		this.K = K;
+		this.N = N;
+		AIHelper = new AIHelper(M, N, K, first, timeout_in_secs);
 		board = new MNKBoard(M, N, K);
 		decresc =  (b1, b2) -> {
 			if (b1.estimate - b2.estimate == 0.0) return 1;	// TreeSet non contiene "duplicati"
@@ -33,12 +38,17 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 
 	@Override
 	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
-		long start = System.currentTimeMillis();
+		start = System.currentTimeMillis();
 
-		// Recover the last move
 		if (MC.length > 0) {
+			// Recover the last move
 			MNKCell c = MC[MC.length - 1];
 			board.markCell(c.i, c.j);
+		} else {
+			// First to play
+			MNKCell middleCell = new MNKCell(M/2, N/2);
+			board.markCell(middleCell.i, middleCell.j);
+			return middleCell;
 		}
 
 		// Only one possible move
@@ -49,8 +59,10 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 		MNKCell bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
 		int depth = 0;
-		TreeSet<MNKCellHeuristic> cells = getNextMoves(FC, board, true);
+		TreeSet<MNKCellHeuristic> cells = getBestMoves(FC, board, true);
 		for(MNKCellHeuristic cell: cells) {
+			if (AIHelper.isTimeEnded(start)) break;
+
 			board.markCell(cell.i, cell.j);
 			double moveEval = alphabeta(board, cell.estimate, true, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, depth);
 			if (moveEval >= bestEval) {
@@ -69,15 +81,14 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 	private double alphabeta(MNKBoard board, double estimate, boolean myTurn, double a, double b, int depth) {
 		MNKCell FC[] = board.getFreeCells();
 
-		// situazione vantaggiosa/svantaggiosa totale
+		// situazione vantaggiosa totale
 		if (Double.isInfinite(estimate))
-			return myTurn ? heuristics.LARGE - depth : -heuristics.LARGE + depth;
+			return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
 
-//		 TODO: add condizione di tempo scaduto
-		if (depth == 2 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN)
+		if (FC.length ==  0 || board.gameState() != MNKGameState.OPEN || AIHelper.isTimeEnded(start))
 			return estimate;
 
-		TreeSet<MNKCellHeuristic> cells = getNextMoves(FC, board, myTurn);
+		TreeSet<MNKCellHeuristic> cells = getBestMoves(FC, board, myTurn);
 		if (myTurn) {
 			for (MNKCellHeuristic cell : cells) {
 				board.markCell(cell.i, cell.j);
@@ -101,13 +112,15 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 		}
 	}
 
-	TreeSet<MNKCellHeuristic> getNextMoves(MNKCell FC[], MNKBoard board, boolean isDecresc) {
-		TreeSet<MNKCellHeuristic> cells = new TreeSet(isDecresc ? decresc : cresc);
+	TreeSet<MNKCellHeuristic> getBestMoves(MNKCell FC[], MNKBoard board, boolean myTurn) {
+		TreeSet<MNKCellHeuristic> cells = new TreeSet(myTurn ? decresc : cresc);
 		double estimate;
 		// O(n log n)
 		for (MNKCell cell : FC) {
+			if (AIHelper.isTimeEnded(start)) break;
+
 			board.markCell(cell.i, cell.j);
-			estimate = heuristics.evaluate(board, cell);
+			estimate = AIHelper.evaluate(board, cell);
 			board.unmarkCell();
 			// O(log n)
 			cells.add(new MNKCellHeuristic(cell.i, cell.j, cell.state, estimate));
