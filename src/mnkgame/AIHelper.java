@@ -20,6 +20,10 @@ public class AIHelper {
             super(i, j, state);
             this.estimate = estimate;
         }
+        @Override
+        public String toString() {
+            return super.toString() + " - " + this.estimate;
+        }
     }
 
     public AIHelper(int M, int N, int K, boolean first, int timeout) {
@@ -57,6 +61,7 @@ public class AIHelper {
             if (Double.isInfinite(estimate))
                 break;
         }
+        this.printPassedTimeAndMessage(cells.toString());
         return cells;
     }
 
@@ -66,8 +71,10 @@ public class AIHelper {
             return Double.POSITIVE_INFINITY;
         else if (state == yourWin)
             return Double.NEGATIVE_INFINITY;
-        return 0;
+        else if (state == MNKGameState.DRAW)
+            return 0;
         // qui euristiche su partita ancora aperta
+        return 0;
 
     }
 
@@ -77,7 +84,7 @@ public class AIHelper {
     public double alphabeta(MNKBoard board, double estimate, boolean myTurn, double a, double b, int depth) {
         MNKCell FC[] = board.getFreeCells();
 
-        // situazione vantaggiosa totale
+        // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
             return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
 
@@ -86,30 +93,36 @@ public class AIHelper {
 
         TreeSet<MNKCellHeuristic> cells = getBestMoves(FC, board, myTurn);
         if (myTurn) {
+            double eval = Double.POSITIVE_INFINITY;
             for (MNKCellHeuristic cell : cells) {
                 board.markCell(cell.i, cell.j);
-                double eval = alphabeta(board, cell.estimate, false, a, b, depth++);
+                eval = Math.min(eval, alphabeta(board, cell.estimate, false, a, b, depth++));
                 board.unmarkCell();
                 b = Math.min(eval, b);
                 if (b <= a)
-                    return a;
+                    break;
             }
-            return b;
+            return eval;
         } else {
+            double eval = Double.NEGATIVE_INFINITY;
             for (MNKCellHeuristic cell : cells) {
                 board.markCell(cell.i, cell.j);
-                double eval = alphabeta(board, cell.estimate, true, a, b, depth++);
+                eval = Math.max(eval, alphabeta(board, cell.estimate, true, a, b, depth++));
                 board.unmarkCell();
                 a = Math.max(eval, a);
                 if (b <= a)
-                    return b;
+                    break;
             }
-            return a;
+            return eval;
         }
     }
 
     public void setStart(long start) {
         this.start = start;
+    }
+
+    public void printPassedTimeAndMessage(String message) {
+        System.out.println(String.format("%d: %s", System.currentTimeMillis()-start, message));
     }
 
     public boolean isTimeEnded() {
