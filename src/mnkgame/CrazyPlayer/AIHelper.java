@@ -11,14 +11,16 @@ import java.util.TreeSet;
 public class AIHelper {
     static final double LARGE = 1e4;
 
-    final int M, N, K;
-    final boolean first;
-    final int timeout;
-    MNKGameState myWin, yourWin;
-    MNKCellState myState;
+    private final int M, N, K;
+    private final boolean first;
+    private final int timeout;
+    private MNKGameState myWin, yourWin;
+    private MNKCellState myState;
     private long start;
     private Comparator<MNKCellHeuristic> cresc;
     private Comparator<MNKCellHeuristic> decresc;
+    private int[] rowBounds;
+    private int[] colBounds;
 
     public static class MNKCellHeuristic extends MNKCell {
         double estimate;
@@ -58,6 +60,9 @@ public class AIHelper {
         for (MNKCell cell : FC) {
             if (isTimeEnded())
                 break;
+            if (!isCellInBounds(cell))
+                continue;
+
             board.markCell(cell.i, cell.j);
             estimate = evaluate(board, cell);
             board.unmarkCell();
@@ -68,7 +73,7 @@ public class AIHelper {
             if (Double.isInfinite(estimate))
                 break;
         }
-        this.printPassedTimeAndMessage(cells.toString());
+//        this.printPassedTimeAndMessage(cells.toString());
         return cells;
     }
 
@@ -128,17 +133,39 @@ public class AIHelper {
         return eval;
     }
 
-    public void setStart(long start) {
-        this.start = start;
+    public boolean isCellInBounds(MNKCell cell) {
+        boolean checkRow = cell.i >= rowBounds[0] && cell.i <= rowBounds[1];
+        boolean checkCol = cell.j >= colBounds[0] && cell.j <= colBounds[1];
+        return checkRow && checkCol;
     }
 
-    public void printPassedTimeAndMessage(String message) {
-        System.out.println(String.format("%d: %s", System.currentTimeMillis()-start, message));
+    public void updateBounds(MNKCell cell) {
+        if (rowBounds == null || colBounds == null) {
+            rowBounds = new int[] {cell.i - 1, cell.i + 1};
+            colBounds = new int[] {cell.j - 1, cell.j + 1};
+        } else {
+            rowBounds[0] = Math.min(cell.i - 1, rowBounds[0]);
+            rowBounds[1] = Math.max(cell.i + 1, rowBounds[1]);
+            colBounds[0] = Math.min(cell.j - 1, colBounds[0]);
+            colBounds[1] = Math.max(cell.j + 1, colBounds[1]);
+        }
+    }
+
+    public void printBounds() {
+        System.out.println(String.format("Row: %d/%d, Col: %d/%d", rowBounds[0], rowBounds[1], colBounds[0], colBounds[1]));
+    }
+
+    public void setStart(long start) {
+        this.start = start;
     }
 
     public boolean isTimeEnded() {
         boolean isTimeEnded = (System.currentTimeMillis()-start) / 1000.0 > timeout*(99.0/100.0);
         return isTimeEnded;
+    }
+
+    public void printPassedTimeAndMessage(String message) {
+        System.out.println(String.format("%d: %s", System.currentTimeMillis()-start, message));
     }
 
 }

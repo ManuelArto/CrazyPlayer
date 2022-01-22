@@ -1,9 +1,13 @@
-package mnkgame;
+package mnkgame.CrazyPlayer;
 
+
+import mnkgame.MNKBoard;
+import mnkgame.MNKCell;
+import mnkgame.MNKPlayer;
 
 import java.util.TreeSet;
 
-public class AlphaBetaPruningPlayer implements MNKPlayer {
+public class CrazyPlayer implements MNKPlayer {
 	private AIHelper ai;
 	private int M, N, K;
 	private MNKBoard board;
@@ -19,6 +23,8 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 
 	@Override
 	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
+		// TODO: valutare aggiunta di try-catch
+
 		long start = System.currentTimeMillis();
 		ai.setStart(start);
 
@@ -26,10 +32,12 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 			// Recover the last move
 			MNKCell c = MC[MC.length - 1];
 			board.markCell(c.i, c.j);
+			ai.updateBounds(c);
 		} else {
 			// First to play
 			MNKCell middleCell = new MNKCell(M/2, N/2);
 			board.markCell(middleCell.i, middleCell.j);
+			ai.updateBounds(middleCell);
 			return middleCell;
 		}
 
@@ -54,14 +62,16 @@ public class AlphaBetaPruningPlayer implements MNKPlayer {
 			board.unmarkCell();
 		}
 		board.markCell(bestCell.i, bestCell.j);
+		ai.updateBounds(bestCell);
 
 		System.out.println(System.currentTimeMillis() - start);
+		ai.printBounds();
 
 		return bestCell;
 	}
 
 	@Override
 	public String playerName() {
-		return "AlphaBetaPruningPlayer";
+		return "CrazyPlayerPazzissimo";
 	}
 }
