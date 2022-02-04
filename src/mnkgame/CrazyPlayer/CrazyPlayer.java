@@ -1,7 +1,5 @@
 package mnkgame.CrazyPlayer;
 
-
-import mnkgame.MNKBoard;
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
 
@@ -10,7 +8,7 @@ import java.util.TreeSet;
 public class CrazyPlayer implements MNKPlayer {
 	private AIHelper ai;
 	private int M, N, K;
-	private MNKBoard board;
+	private AIHelper.MNKBoardEstimate board;
 
 	@Override
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -18,7 +16,7 @@ public class CrazyPlayer implements MNKPlayer {
 		this.N = N;
 		this.K = K;
 		ai = new AIHelper(M, N, K, first, timeout_in_secs);
-		board = new MNKBoard(M, N, K);
+		board = new AIHelper.MNKBoardEstimate(M, N, K);
 	}
 
 	@Override
@@ -35,7 +33,7 @@ public class CrazyPlayer implements MNKPlayer {
 			ai.updateBounds(c);
 		} else {
 			// First to play
-			MNKCell middleCell = new MNKCell(M/2, N/2);
+			MNKCell middleCell = new MNKCell(M / 2, N / 2);
 			board.markCell(middleCell.i, middleCell.j);
 			ai.updateBounds(middleCell);
 			return middleCell;
@@ -49,8 +47,8 @@ public class CrazyPlayer implements MNKPlayer {
 		MNKCell bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
 		int depth = 0;
-		TreeSet<AIHelper.MNKCellHeuristic> cells = ai.getBestMoves(FC, board, true);
-		for(AIHelper.MNKCellHeuristic cell: cells) {
+		TreeSet<AIHelper.MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
+		for (AIHelper.MNKCellEstimate cell : cells) {
 			if (ai.isTimeEnded()) break;
 
 			board.markCell(cell.i, cell.j);

@@ -2,7 +2,6 @@ package mnkgame.CrazyPlayer;
 
 import mnkgame.MNKBoard;
 import mnkgame.MNKCell;
-import mnkgame.MNKCellState;
 import mnkgame.MNKGameState;
 
 import java.util.Comparator;
@@ -15,17 +14,17 @@ public class AIHelper {
     private final boolean first;
     private final int timeout;
     private MNKGameState myWin, yourWin;
-    private MNKCellState myState;
+    private int myPlayer;
     private long start;
-    private Comparator<MNKCellHeuristic> cresc;
-    private Comparator<MNKCellHeuristic> decresc;
+    private Comparator<MNKCellEstimate> cresc;
+    private Comparator<MNKCellEstimate> decresc;
     private int[] rowBounds;
     private int[] colBounds;
 
-    public static class MNKCellHeuristic extends MNKCell {
+    public static class MNKCellEstimate extends MNKCell {
         double estimate;
-        public MNKCellHeuristic(int i, int j, MNKCellState state, double estimate) {
-            super(i, j, state);
+        public MNKCellEstimate(int i, int j, double estimate) {
+            super(i, j);
             this.estimate = estimate;
         }
         @Override
@@ -34,13 +33,20 @@ public class AIHelper {
         }
     }
 
+    public static class MNKBoardEstimate extends MNKBoard {
+        public MNKBoardEstimate(int M, int N, int K) throws IllegalArgumentException {
+            super(M, N, K);
+        }
+        public void switchPlayer() { currentPlayer = (currentPlayer + 1) % 2; }
+    }
+
     public AIHelper(int M, int N, int K, boolean first, int timeout) {
         this.M = M;
         this.N = N;
         this.K = K;
         this.first = first;
         this.timeout = timeout;
-        myState = first ? MNKCellState.P1 : MNKCellState.P2;
+        myPlayer = first ? 0 : 1;
         myWin = first ? MNKGameState.WINP1 : MNKGameState.WINP2;
         yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
         decresc =  (b1, b2) -> {
@@ -53,8 +59,8 @@ public class AIHelper {
         };
     }
 
-    public TreeSet<MNKCellHeuristic> getBestMoves(MNKCell FC[], MNKBoard board, boolean myTurn) {
-        TreeSet<MNKCellHeuristic> cells = new TreeSet(myTurn ? decresc : cresc);
+    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell FC[], MNKBoardEstimate board, boolean myTurn) {
+        TreeSet<MNKCellEstimate> cells = new TreeSet(myTurn ? decresc : cresc);
         double estimate;
         // O(n log n)
         for (MNKCell cell : FC) {
@@ -67,7 +73,7 @@ public class AIHelper {
             estimate = evaluate(board, cell);
             board.unmarkCell();
             // O(log n)
-            cells.add(new MNKCellHeuristic(cell.i, cell.j, cell.state, estimate));
+            cells.add(new MNKCellEstimate(cell.i, cell.j, estimate));
             // non ha senso procedere con il calcolo dell'estimate per le altre celle se mi accorgo di essere
             // in una situazione vantaggiosa/svantaggiosa totale
             if (Double.isInfinite(estimate))
@@ -77,61 +83,68 @@ public class AIHelper {
         return cells;
     }
 
-    public double evaluate(MNKBoard board, MNKCell lastCell) {
-        MNKGameState state = board.gameState();
-        if (state == myWin)
-            return Double.POSITIVE_INFINITY;
-        else if (state == yourWin)
-            return Double.NEGATIVE_INFINITY;
-        else if (state == MNKGameState.DRAW)
-            return 0;
-        // qui euristiche su partita ancora aperta
-
-        // Verifica che lastCell blocchi una vittoria dell'avversario =>
-
-        return 0;
-
-    }
-
-    // find threats
-
-
-    public double alphabeta(MNKBoard board, double estimate, boolean myTurn, double a, double b, int depth) {
+    public double alphabeta(MNKBoardEstimate board, double estimate, boolean myTurn, double a, double b, int depth) {
         MNKCell FC[] = board.getFreeCells();
 
-        // TODO: verifica se corretta gestione della profondità
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
-            return myTurn ? AIHelper.LARGE + depth : -AIHelper.LARGE - depth;
+            return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
 
         if (depth == 3 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
-        TreeSet<MNKCellHeuristic> cells = getBestMoves(FC, board, myTurn);
+        TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);
         double eval;
         if (myTurn) {
             eval = Double.POSITIVE_INFINITY;
-            for (MNKCellHeuristic cell : cells) {
+            for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
                 eval = Math.min(eval, alphabeta(board, cell.estimate, false, a, b, depth++));
                 board.unmarkCell();
                 b = Math.min(eval, b);
-                if (b <= a)
+                if (b <= a)             // a cutoff
                     break;
             }
         } else {
             eval = Double.NEGATIVE_INFINITY;
-            for (MNKCellHeuristic cell : cells) {
+            for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
                 eval = Math.max(eval, alphabeta(board, cell.estimate, true, a, b, depth++));
                 board.unmarkCell();
                 a = Math.max(eval, a);
-                if (b <= a)
+                if (b <= a)             // b cutoff
                     break;
             }
         }
         return eval;
     }
+
+    public double evaluate(MNKBoardEstimate board, MNKCell lastCell) {
+        MNKGameState state = board.gameState();
+        if (state == MNKGameState.DRAW)
+            return 0;
+        else if (state == myWin || state == yourWin || blockAWin(board, lastCell))
+            return board.currentPlayer() == myPlayer ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+
+        // qui euristiche su partita ancora aperta
+
+        return 0;
+
+    }
+
+    private boolean blockAWin(MNKBoardEstimate board, MNKCell lastCell) {
+        for (int i = 0; i < 2; i++) {
+            board.unmarkCell();
+            board.switchPlayer();
+            MNKGameState state = board.markCell(lastCell.i, lastCell.j);
+            if (state == yourWin || state == myWin)
+                return true;
+        }
+        return false;
+    }
+
+    // find threats
+
 
     public boolean isCellInBounds(MNKCell cell) {
         boolean checkRow = cell.i >= rowBounds[0] && cell.i <= rowBounds[1];
