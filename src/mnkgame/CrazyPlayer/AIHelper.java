@@ -8,18 +8,15 @@ import java.util.Comparator;
 import java.util.TreeSet;
 
 public class AIHelper {
-    static final double LARGE = 1e4;
+    static final double LARGE = 1e3;
 
     private final int M, N, K;
-    private final boolean first;
     private final int timeout;
-    private MNKGameState myWin, yourWin;
-    private int myPlayer;
+    private final MNKGameState myWin, yourWin;
+    private final int myPlayer;
+    private final Comparator<MNKCellEstimate> cresc, decresc;
+    private final TranspositionTable transTable;
     private long start;
-    private Comparator<MNKCellEstimate> cresc;
-    private Comparator<MNKCellEstimate> decresc;
-    private int[] rowBounds;
-    private int[] colBounds;
 
     public static class MNKCellEstimate extends MNKCell {
         double estimate;
@@ -34,8 +31,10 @@ public class AIHelper {
     }
 
     public static class MNKBoardEstimate extends MNKBoard {
-        public MNKBoardEstimate(int M, int N, int K) throws IllegalArgumentException {
+        private int bound;
+        public MNKBoardEstimate(int M, int N, int K, int bound) throws IllegalArgumentException {
             super(M, N, K);
+            this.bound = bound;
         }
         public void switchPlayer() { currentPlayer = (currentPlayer + 1) % 2; }
     }
@@ -44,7 +43,6 @@ public class AIHelper {
         this.M = M;
         this.N = N;
         this.K = K;
-        this.first = first;
         this.timeout = timeout;
         myPlayer = first ? 0 : 1;
         myWin = first ? MNKGameState.WINP1 : MNKGameState.WINP2;
@@ -57,20 +55,22 @@ public class AIHelper {
             if (b2.estimate - b1.estimate == 0.0) return -1;
             return (int) (b2.estimate - b1.estimate);
         };
+        this.transTable = new TranspositionTable(M, N, K);
     }
 
-    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell FC[], MNKBoardEstimate board, boolean myTurn) {
+    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEstimate board, boolean myTurn) {
         TreeSet<MNKCellEstimate> cells = new TreeSet(myTurn ? decresc : cresc);
-        double estimate;
+//        board.calculateBounds();
         // O(n log n)
         for (MNKCell cell : FC) {
             if (isTimeEnded())
                 break;
-            if (!isCellInBounds(cell))
-                continue;
+//            if (!board.isCellInBounds(cell))
+//                continue;
 
             board.markCell(cell.i, cell.j);
-            estimate = evaluate(board, cell);
+            // TODO: verifica se conviene TT lookup here
+            double estimate = evaluate(board, cell);
             board.unmarkCell();
             // O(log n)
             cells.add(new MNKCellEstimate(cell.i, cell.j, estimate));
@@ -84,13 +84,31 @@ public class AIHelper {
     }
 
     public double alphabeta(MNKBoardEstimate board, double estimate, boolean myTurn, double a, double b, int depth) {
-        MNKCell FC[] = board.getFreeCells();
+        double aOrig = a;
+        // TranspositionTable Lookup
+        TranspositionTable.StoredValue entry = transTable.get(board);
+        String boardState = transTable.getCurrentBoardState();
+        if (entry != null && entry.getDepth() <= depth) {
+            switch (entry.getFlag()) {
+                case EXACT:
+                    return entry.getValue();
+                case UPPERBOUND:
+                    b = Math.min(b, entry.getValue());
+                    break;
+                case LOWERBOUND:
+                    a = Math.max(a, entry.getValue());
+                    break;
+            }
+            if (a >= b)
+                return entry.getValue();
+        }
+
+        MNKCell[] FC = board.getFreeCells();
 
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
             return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
-
-        if (depth == 3 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
+        if (depth == 10 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
         TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);
@@ -99,7 +117,7 @@ public class AIHelper {
             eval = Double.POSITIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.min(eval, alphabeta(board, cell.estimate, false, a, b, depth++));
+                eval = Math.min(eval, alphabeta(board, cell.estimate, false, a, b, depth+1));
                 board.unmarkCell();
                 b = Math.min(eval, b);
                 if (b <= a)             // a cutoff
@@ -109,13 +127,17 @@ public class AIHelper {
             eval = Double.NEGATIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.max(eval, alphabeta(board, cell.estimate, true, a, b, depth++));
+                eval = Math.max(eval, alphabeta(board, cell.estimate, true, a, b, depth+1));
                 board.unmarkCell();
                 a = Math.max(eval, a);
                 if (b <= a)             // b cutoff
                     break;
             }
         }
+
+        // TranspositionTable Store
+        transTable.store(boardState, aOrig, b, eval, depth, myTurn);
+
         return eval;
     }
 
@@ -123,8 +145,10 @@ public class AIHelper {
         MNKGameState state = board.gameState();
         if (state == MNKGameState.DRAW)
             return 0;
-        else if (state == myWin || state == yourWin || blockAWin(board, lastCell))
-            return board.currentPlayer() == myPlayer ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+        else if (state == myWin || state == yourWin)
+            return board.currentPlayer() != myPlayer ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+        else if (blockAWin(board, lastCell))
+            return (board.currentPlayer() != myPlayer ? 1 : -1) * LARGE / 10;
 
         // qui euristiche su partita ancora aperta
 
@@ -133,39 +157,20 @@ public class AIHelper {
     }
 
     private boolean blockAWin(MNKBoardEstimate board, MNKCell lastCell) {
-        for (int i = 0; i < 2; i++) {
-            board.unmarkCell();
-            board.switchPlayer();
-            MNKGameState state = board.markCell(lastCell.i, lastCell.j);
-            if (state == yourWin || state == myWin)
-                return true;
-        }
-        return false;
+        board.unmarkCell();
+        board.switchPlayer();
+        MNKGameState state = board.markCell(lastCell.i, lastCell.j);
+        board.unmarkCell();
+        board.switchPlayer();
+        board.markCell(lastCell.i, lastCell.j);
+        return (state == yourWin || state == myWin);
     }
 
     // find threats
 
-
-    public boolean isCellInBounds(MNKCell cell) {
-        boolean checkRow = cell.i >= rowBounds[0] && cell.i <= rowBounds[1];
-        boolean checkCol = cell.j >= colBounds[0] && cell.j <= colBounds[1];
-        return checkRow && checkCol;
-    }
-
-    public void updateBounds(MNKCell cell) {
-        if (rowBounds == null || colBounds == null) {
-            rowBounds = new int[] {cell.i - 1, cell.i + 1};
-            colBounds = new int[] {cell.j - 1, cell.j + 1};
-        } else {
-            rowBounds[0] = Math.min(cell.i - 1, rowBounds[0]);
-            rowBounds[1] = Math.max(cell.i + 1, rowBounds[1]);
-            colBounds[0] = Math.min(cell.j - 1, colBounds[0]);
-            colBounds[1] = Math.max(cell.j + 1, colBounds[1]);
-        }
-    }
-
-    public void printBounds() {
-        System.out.println(String.format("Row: %d/%d, Col: %d/%d", rowBounds[0], rowBounds[1], colBounds[0], colBounds[1]));
+    public boolean isCellInBounds(MNKCell[] MC) {
+        // calculate bounds
+        return true;
     }
 
     public void setStart(long start) {
@@ -173,12 +178,11 @@ public class AIHelper {
     }
 
     public boolean isTimeEnded() {
-        boolean isTimeEnded = (System.currentTimeMillis()-start) / 1000.0 > timeout*(99.0/100.0);
-        return isTimeEnded;
+        return (System.currentTimeMillis()-start) / 1000.0 > timeout*(99.0/100.0);
     }
 
     public void printPassedTimeAndMessage(String message) {
-        System.out.println(String.format("%d: %s", System.currentTimeMillis()-start, message));
+        System.out.printf("%d: %s%n\n", System.currentTimeMillis()-start, message);
     }
 
 }
