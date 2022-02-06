@@ -60,13 +60,13 @@ public class AIHelper {
 
     public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEstimate board, boolean myTurn) {
         TreeSet<MNKCellEstimate> cells = new TreeSet(myTurn ? decresc : cresc);
-//        board.calculateBounds();
+        MNKCell[] MC = board.getMarkedCells();
         // O(n log n)
         for (MNKCell cell : FC) {
             if (isTimeEnded())
                 break;
-//            if (!board.isCellInBounds(cell))
-//                continue;
+            if (!isCellInBounds(MC, cell))
+                continue;
 
             board.markCell(cell.i, cell.j);
             // TODO: verifica se conviene TT lookup here
@@ -168,9 +168,16 @@ public class AIHelper {
 
     // find threats
 
-    public boolean isCellInBounds(MNKCell[] MC) {
-        // calculate bounds
-        return true;
+    public boolean isCellInBounds(MNKCell[] MC, MNKCell cell) {
+        int bound = M * N <= 16 ? 1 : 2;
+        for (MNKCell mc : MC) {
+            boolean rowBound = (cell.i >= mc.i - bound && cell.i <= mc.i + bound);
+            boolean colBound = (cell.j >= mc.j - bound || cell.j <= mc.j + bound);
+            if (rowBound && colBound)
+                return true;
+        }
+
+        return false;
     }
 
     public void setStart(long start) {
