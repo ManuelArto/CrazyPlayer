@@ -83,7 +83,7 @@ public class AIHelper {
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
             return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
-        if (depth == 10 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
+        if (depth == 3 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
         TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);

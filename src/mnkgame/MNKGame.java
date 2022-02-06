@@ -151,7 +151,7 @@ public class MNKGame extends JFrame {
 
 					try { 
 						// TIMEOUT secs + 10% more time
-  					c = task.get((int)(TIMEOUT+0.1*TIMEOUT), TimeUnit.DAYS);
+  					c = task.get((int)(TIMEOUT+0.1*TIMEOUT), TimeUnit.SECONDS);
 					}
 					catch(TimeoutException ex) {
 						executor.shutdownNow();	

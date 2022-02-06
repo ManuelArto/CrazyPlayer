@@ -1,6 +1,7 @@
 package mnkgame.CrazyPlayer;
 
-import mnkgame.MNKBoard;
+import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
+import mnkgame.MNKCellState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,17 +52,26 @@ public class TranspositionTable {
 //                storedValue.getValue(), storedValue.getFlag(), storedValue.getDepth(), myTurn);
     }
 
-    public StoredValue get(MNKBoard board) {
-        currentBoardState = boardToString(board);
-        // TODO: Verifica per ogni mirrored or turned boards
-        return table.get(currentBoardState);
+    public StoredValue get(MNKBoardEnhanced board) {
+        String boardState = null;
+        // TODO verificare se conviene calcolare ogni volta turned and mirrored board oppure clonare i valori
+        // Ottimizzazione vs spazio
+        if (M == N)
+            boardState = findRotatedBoard(board.getBoardState());
+        if (boardState == null)
+            boardState = findMirrorBoard(board.getBoardState());
+        if (boardState == null)
+            boardState = boardToString(board.getBoardState());
+
+        currentBoardState = boardState;
+        return table.get(boardState);
     }
 
-    public String boardToString(MNKBoard board) {
+    public String boardToString(MNKCellState[][] board) {
         StringBuilder boardState = new StringBuilder();
-        for (int i = 0; i < board.M; i++) {
-            for (int j = 0; j < board.N; j++) {
-                switch(board.cellState(i, j)) {
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < N; j++) {
+                switch(board[i][j]) {
                     case FREE:
                         boardState.append("-");
                         break;
@@ -81,7 +91,70 @@ public class TranspositionTable {
         return currentBoardState;
     }
 
-    private String formatBoardState(String boardState) {
+    public int getSize() {
+        return table.size();
+    }
+
+    public String findMirrorBoard(MNKCellState[][] board) {
+        MNKCellState[][] horMirrBoard = new MNKCellState[M][N];
+        MNKCellState[][] verMirrBoard = new MNKCellState[M][N];
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < N; j++) {
+                horMirrBoard[i][j] = board[M - i - 1][j];
+                verMirrBoard[i][j] = board[i][N - j - 1];
+            }
+        }
+        String horBoardState = boardToString(horMirrBoard);
+        if (table.containsKey(horBoardState))
+            return horBoardState;
+        String verBoardState = boardToString(verMirrBoard);
+        if (table.containsKey(verBoardState))
+            return verBoardState;
+
+        return null;
+    }
+
+    public String findRotatedBoard(MNKCellState[][] board) {
+        // clone board
+        MNKCellState[][] rotBoard = new MNKCellState[M][N];
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < N; j++)
+                rotBoard[i][j] = board[i][j];
+        }
+
+        // right rotation => Trasposta + swap columns
+        int rotationNumber = 0;
+        while (rotationNumber < 3) {
+            // Trova trasposta
+            for (int i = 0; i < M; i++) {
+                for (int j = i; j < N; j++) {
+                    MNKCellState temp = rotBoard[i][j];
+                    rotBoard[i][j] = rotBoard[j][i];
+                    rotBoard[j][i] = temp;
+                }
+            }
+            // swap columns
+            for (int i = 0; i < M; i++) {
+                int low = 0, high = N - 1;
+                while (low < high) {
+                    MNKCellState temp = rotBoard[i][low];
+                    rotBoard[i][low] = rotBoard[i][high];
+                    rotBoard[i][high] = temp;
+                    low++;
+                    high--;
+                }
+            }
+
+            String boardState = boardToString(rotBoard);
+            if (table.containsKey(boardState))
+                return boardState;
+            rotationNumber++;
+        }
+
+        return null;
+    }
+
+    public String formatBoardState(String boardState) {
         StringBuilder board = new StringBuilder();
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) {
@@ -93,3 +166,14 @@ public class TranspositionTable {
     }
 
 }
+
+/**
+ *
+ X  X  -				 -  -  X			  -  O  -			   -  -  -
+ -  X  - ==> turn +90    O  X  X  && turn +90 -  X  -  && turn +90 X  X  O
+ -  O  -				 -  -  -			  -  X  X			   X  -  -
+
+ X  X  -			   -  X  X             -  O  -        -  -  -           X  -  -
+ -  X  - ==> mirror LR -  X  -   mirror UP -  X  -    DL  O  X  X    DR     X  X  O
+ -  O  -			   -  O  -             X  X  -        -  -  X           -  -  -
+ */

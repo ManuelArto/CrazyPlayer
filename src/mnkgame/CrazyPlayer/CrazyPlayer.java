@@ -1,5 +1,7 @@
 package mnkgame.CrazyPlayer;
 
+import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
+import mnkgame.CrazyPlayer.model.MNKCellEstimate;
 import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
 
@@ -8,7 +10,7 @@ import java.util.TreeSet;
 public class CrazyPlayer implements MNKPlayer {
 	private AIHelper ai;
 	private int M, N, K;
-	private AIHelper.MNKBoardEstimate board;
+	private MNKBoardEnhanced board;
 
 	@Override
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -17,7 +19,7 @@ public class CrazyPlayer implements MNKPlayer {
 		this.K = K;
 		ai = new AIHelper(M, N, K, first, timeout_in_secs);
 		// TODO: check bound
-		board = new AIHelper.MNKBoardEstimate(M, N, K, (M * N <= 16 ? 2 : 1));
+		board = new MNKBoardEnhanced(M, N, K);
 	}
 
 	@Override
@@ -45,12 +47,13 @@ public class CrazyPlayer implements MNKPlayer {
 		// ALPHABETA
 		MNKCell bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
-		TreeSet<AIHelper.MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
-		for (AIHelper.MNKCellEstimate cell : cells) {
+		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
+		ai.showSelectedCells(cells, MC);
+		for (MNKCellEstimate cell : cells) {
 			if (ai.isTimeEnded()) break;
 
 			board.markCell(cell.i, cell.j);
-			double eval = ai.alphabeta(board, cell.estimate, true, -AIHelper.LARGE, AIHelper.LARGE, 0);
+			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 0);
 			if (eval >= bestEval) {
 				bestEval = eval;
 				bestCell = cell;
@@ -59,7 +62,7 @@ public class CrazyPlayer implements MNKPlayer {
 		}
 		board.markCell(bestCell.i, bestCell.j);
 
-		System.out.println(System.currentTimeMillis() - start);
+		ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
 
 		return bestCell;
 	}
