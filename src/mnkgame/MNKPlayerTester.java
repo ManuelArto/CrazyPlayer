@@ -307,8 +307,17 @@ public class MNKPlayerTester {
 			System.out.println("Timeout   : " + TIMEOUT + " secs\n\n");
 		}
 
-		for(int i = 1; i <= ROUNDS; i++) {
-			if(VERBOSE) System.out.println("\n**** ROUND " + i + " ****");
+		for(int i = 0; i < ROUNDS*2; i++) {
+			if (i > 0) {
+				MNKPlayer temp = Player[0];
+				Player[0] = Player[1];
+				Player[1] = temp;
+				int t = P1SCORE;
+				P1SCORE = P2SCORE;
+				P2SCORE = t;
+			}
+
+			if(VERBOSE) System.out.println("\n**** ROUND " + i+1 + " ****");
 			initGame();
 			GameState state = runGame();
 
@@ -322,12 +331,13 @@ public class MNKPlayerTester {
 				            break;
 			}
 			if(VERBOSE) {
-				System.out.println("\nGame state    : " + state);
-				System.out.println("Current score : " + Player[0].playerName() + " (" + P1SCORE + ") - " + Player[1].playerName() + " (" + P2SCORE + ")");
+				System.out.println("Game state    : " + state);
+				System.out.println("Current score : " + Player[i % 2].playerName() + " (" + (i % 2 == 0 ? P1SCORE : P2SCORE) + ") - " +
+														Player[Math.abs(i % 2 - 1)].playerName() + " (" + (i % 2 == 0 ? P2SCORE : P1SCORE) + ")");
 			}
 		}
 		if(VERBOSE) System.out.println("\n**** FINAL SCORE ****");
+		System.out.println(Player[1].playerName() + " " + P2SCORE);
 		System.out.println(Player[0].playerName() + " " + P1SCORE);
-		System.out.println(Player[1].playerName() + " " + P2SCORE);	
 	}
 }

@@ -166,14 +166,3 @@ public class TranspositionTable {
     }
 
 }
-
-/**
- *
- X  X  -				 -  -  X			  -  O  -			   -  -  -
- -  X  - ==> turn +90    O  X  X  && turn +90 -  X  -  && turn +90 X  X  O
- -  O  -				 -  -  -			  -  X  X			   X  -  -
-
- X  X  -			   -  X  X             -  O  -        -  -  -           X  -  -
- -  X  - ==> mirror LR -  X  -   mirror UP -  X  -    DL  O  X  X    DR     X  X  O
- -  O  -			   -  O  -             X  X  -        -  -  X           -  -  -
- */

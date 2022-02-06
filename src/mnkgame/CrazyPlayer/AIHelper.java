@@ -83,7 +83,7 @@ public class AIHelper {
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
             return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
-        if (depth == 3 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
+        if (depth == 5 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
         TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);
@@ -162,10 +162,11 @@ public class AIHelper {
     // find threats
 
     public boolean isCellInBounds(MNKCell[] MC, MNKCell cell) {
-        int bound = M * N <= 16 ? 1 : 2;
+        // TODO: check bound
+        int bound = M * N <= 1000 ? 1 : 2;
         for (MNKCell mc : MC) {
             boolean rowBound = (cell.i >= mc.i - bound && cell.i <= mc.i + bound);
-            boolean colBound = (cell.j >= mc.j - bound || cell.j <= mc.j + bound);
+            boolean colBound = (cell.j >= mc.j - bound && cell.j <= mc.j + bound);
             if (rowBound && colBound)
                 return true;
         }
