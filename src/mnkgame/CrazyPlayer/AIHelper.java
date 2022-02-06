@@ -1,43 +1,23 @@
 package mnkgame.CrazyPlayer;
 
-import mnkgame.MNKBoard;
+import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
+import mnkgame.CrazyPlayer.model.MNKCellEstimate;
 import mnkgame.MNKCell;
+import mnkgame.MNKCellState;
 import mnkgame.MNKGameState;
 
-import java.util.Comparator;
 import java.util.TreeSet;
 
 public class AIHelper {
+    public static int numberOfCalls;
     static final double LARGE = 1e3;
 
     private final int M, N, K;
     private final int timeout;
     private final MNKGameState myWin, yourWin;
     private final int myPlayer;
-    private final Comparator<MNKCellEstimate> cresc, decresc;
     private final TranspositionTable transTable;
     private long start;
-
-    public static class MNKCellEstimate extends MNKCell {
-        double estimate;
-        public MNKCellEstimate(int i, int j, double estimate) {
-            super(i, j);
-            this.estimate = estimate;
-        }
-        @Override
-        public String toString() {
-            return super.toString() + " - " + this.estimate;
-        }
-    }
-
-    public static class MNKBoardEstimate extends MNKBoard {
-        private int bound;
-        public MNKBoardEstimate(int M, int N, int K, int bound) throws IllegalArgumentException {
-            super(M, N, K);
-            this.bound = bound;
-        }
-        public void switchPlayer() { currentPlayer = (currentPlayer + 1) % 2; }
-    }
 
     public AIHelper(int M, int N, int K, boolean first, int timeout) {
         this.M = M;
@@ -47,19 +27,11 @@ public class AIHelper {
         myPlayer = first ? 0 : 1;
         myWin = first ? MNKGameState.WINP1 : MNKGameState.WINP2;
         yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
-        decresc =  (b1, b2) -> {
-            if (b1.estimate - b2.estimate == 0.0) return 1;	// TreeSet non contiene "duplicati"
-            return (int) (b1.estimate - b2.estimate);
-        };
-        cresc =  (b1, b2) -> {
-            if (b2.estimate - b1.estimate == 0.0) return -1;
-            return (int) (b2.estimate - b1.estimate);
-        };
         this.transTable = new TranspositionTable(M, N, K);
     }
 
-    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEstimate board, boolean myTurn) {
-        TreeSet<MNKCellEstimate> cells = new TreeSet(myTurn ? decresc : cresc);
+    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEnhanced board, boolean myTurn) {
+        TreeSet<MNKCellEstimate> cells = new TreeSet(MNKCellEstimate.getCellComparator(myTurn));
         MNKCell[] MC = board.getMarkedCells();
         // O(n log n)
         for (MNKCell cell : FC) {
@@ -83,7 +55,10 @@ public class AIHelper {
         return cells;
     }
 
-    public double alphabeta(MNKBoardEstimate board, double estimate, boolean myTurn, double a, double b, int depth) {
+    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int depth) {
+        // for debug
+        numberOfCalls = numberOfCalls + 1;
+
         double aOrig = a;
         // TranspositionTable Lookup
         TranspositionTable.StoredValue entry = transTable.get(board);
@@ -117,7 +92,7 @@ public class AIHelper {
             eval = Double.POSITIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.min(eval, alphabeta(board, cell.estimate, false, a, b, depth+1));
+                eval = Math.min(eval, alphabeta(board, cell.getEstimate(), false, a, b, depth+1));
                 board.unmarkCell();
                 b = Math.min(eval, b);
                 if (b <= a)             // a cutoff
@@ -127,7 +102,7 @@ public class AIHelper {
             eval = Double.NEGATIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.max(eval, alphabeta(board, cell.estimate, true, a, b, depth+1));
+                eval = Math.max(eval, alphabeta(board, cell.getEstimate(), true, a, b, depth+1));
                 board.unmarkCell();
                 a = Math.max(eval, a);
                 if (b <= a)             // b cutoff
@@ -141,7 +116,25 @@ public class AIHelper {
         return eval;
     }
 
-    public double evaluate(MNKBoardEstimate board, MNKCell lastCell) {
+    // TODO: remove later
+    public void showSelectedCells(TreeSet<MNKCellEstimate> cells, MNKCell[] MC) {
+        char[][] board = new char[M][N];
+        for (int row = 0; row < M; row++) {
+            for (int col = 0; col < N; col++)
+                board[row][col] = '.';
+        }
+        for (MNKCellEstimate cell : cells)
+            board[cell.i][cell.j] = '-';
+        for (MNKCell cell : MC)
+            board[cell.i][cell.j] = cell.state == MNKCellState.P1 ? 'X':'O';
+        for (char[] row : board) {
+            for (char col : row)
+                System.out.printf(" %c ", col);
+            System.out.println();
+        }
+    }
+
+    public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
         MNKGameState state = board.gameState();
         if (state == MNKGameState.DRAW)
             return 0;
@@ -156,7 +149,7 @@ public class AIHelper {
 
     }
 
-    private boolean blockAWin(MNKBoardEstimate board, MNKCell lastCell) {
+    private boolean blockAWin(MNKBoardEnhanced board, MNKCell lastCell) {
         board.unmarkCell();
         board.switchPlayer();
         MNKGameState state = board.markCell(lastCell.i, lastCell.j);
@@ -189,7 +182,10 @@ public class AIHelper {
     }
 
     public void printPassedTimeAndMessage(String message) {
-        System.out.printf("%d: %s%n\n", System.currentTimeMillis()-start, message);
+        System.out.printf("Time: %d: %s%n\n", System.currentTimeMillis()-start, message);
     }
 
+    public int getTTSize() {
+        return transTable.getSize();
+    }
 }
