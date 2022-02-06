@@ -5,10 +5,14 @@ import mnkgame.MNKCell;
 import java.util.Comparator;
 
 public class MNKCellEstimate extends MNKCell {
-	double estimate;
+	private double estimate;
 
 	public MNKCellEstimate(int i, int j, double estimate) {
 		super(i, j);
+		this.estimate = estimate;
+	}
+
+	public void setEstimate(double estimate) {
 		this.estimate = estimate;
 	}
 

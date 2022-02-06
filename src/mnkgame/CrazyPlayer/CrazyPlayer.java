@@ -48,12 +48,12 @@ public class CrazyPlayer implements MNKPlayer {
 		MNKCell bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
 		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
-		ai.showSelectedCells(cells, MC);
+//		ai.showSelectedCells(cells, MC);
 		for (MNKCellEstimate cell : cells) {
 			if (ai.isTimeEnded()) break;
 
 			board.markCell(cell.i, cell.j);
-			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 0);
+			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 10);
 			if (eval >= bestEval) {
 				bestEval = eval;
 				bestCell = cell;
@@ -62,7 +62,7 @@ public class CrazyPlayer implements MNKPlayer {
 		}
 		board.markCell(bestCell.i, bestCell.j);
 
-		ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
+//		ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
 
 		return bestCell;
 	}

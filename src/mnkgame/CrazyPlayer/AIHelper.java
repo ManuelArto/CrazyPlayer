@@ -2,6 +2,7 @@ package mnkgame.CrazyPlayer;
 
 import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
 import mnkgame.CrazyPlayer.model.MNKCellEstimate;
+import mnkgame.CrazyPlayer.model.TranspositionTable;
 import mnkgame.MNKCell;
 import mnkgame.MNKCellState;
 import mnkgame.MNKGameState;
@@ -55,7 +56,11 @@ public class AIHelper {
         return cells;
     }
 
-    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int depth) {
+    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int maxDepth) {
+        return alphabeta(board, estimate, myTurn, a, b, maxDepth, 0);
+    }
+
+    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int maxDepth, int depth) {
         // for debug
         numberOfCalls = numberOfCalls + 1;
 
@@ -83,7 +88,7 @@ public class AIHelper {
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
             return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
-        if (depth == 5 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
+        if (depth == maxDepth || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
         TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);
@@ -92,7 +97,7 @@ public class AIHelper {
             eval = Double.POSITIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.min(eval, alphabeta(board, cell.getEstimate(), false, a, b, depth+1));
+                eval = Math.min(eval, alphabeta(board, cell.getEstimate(), false, a, b, maxDepth, depth+1));
                 board.unmarkCell();
                 b = Math.min(eval, b);
                 if (b <= a)             // a cutoff
@@ -102,7 +107,7 @@ public class AIHelper {
             eval = Double.NEGATIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.max(eval, alphabeta(board, cell.getEstimate(), true, a, b, depth+1));
+                eval = Math.max(eval, alphabeta(board, cell.getEstimate(), true, a, b, maxDepth, depth+1));
                 board.unmarkCell();
                 a = Math.max(eval, a);
                 if (b <= a)             // b cutoff

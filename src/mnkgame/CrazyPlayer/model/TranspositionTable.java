@@ -1,18 +1,17 @@
-package mnkgame.CrazyPlayer;
+package mnkgame.CrazyPlayer.model;
 
-import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
 import mnkgame.MNKCellState;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class TranspositionTable {
-    enum BoundType {
+    public enum BoundType {
         UPPERBOUND,
         LOWERBOUND,
         EXACT,
     }
-    static class StoredValue {
+    public static class StoredValue {
         private double value;
         private BoundType flag;
         private int depth;
@@ -55,6 +54,7 @@ public class TranspositionTable {
     public StoredValue get(MNKBoardEnhanced board) {
         String boardState = null;
         // TODO verificare se conviene calcolare ogni volta turned and mirrored board oppure clonare i valori
+        // TODO: ci sono problema più simmetrie
         // Ottimizzazione vs spazio
         if (M == N)
             boardState = findRotatedBoard(board.getBoardState());
@@ -166,3 +166,13 @@ public class TranspositionTable {
     }
 
 }
+/**
+ *
+ X  X  -				 -  -  X			  -  O  -			   -  -  -
+ -  X  - ==> turn +90    O  X  X  && turn +90 -  X  -  && turn +90 X  X  O
+ -  O  -				 -  -  -			  -  X  X			   X  -  -
+
+ X  X  -			   -  X  X             -  O  -        -  -  -           X  -  -
+ -  X  - ==> mirror LR -  X  -   mirror UP -  X  -    DL  O  X  X    DR     X  X  O
+ -  O  -			   -  O  -             X  X  -        -  -  X           -  -  -
+ */
