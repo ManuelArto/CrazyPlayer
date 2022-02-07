@@ -25,12 +25,12 @@ public class MNKCellEstimate extends MNKCell {
 		return super.toString() + " - " + this.estimate;
 	}
 
-	public static Comparator<MNKCellEstimate> getCellComparator(boolean firstPlayerTurn) {
+	public static Comparator<MNKCellEstimate> getCellComparator(boolean decr) {
 		return new Comparator<MNKCellEstimate>() {
 			@Override
 			public int compare(MNKCellEstimate c1, MNKCellEstimate c2) {
 				if (c1.getEstimate() - c2.getEstimate() == 0.0) return 1;    // TreeSet non contiene "duplicati"
-				return (int) (firstPlayerTurn ?
+				return (int) (decr ?
 						(c1.getEstimate() - c2.getEstimate()) :
 						(c2.getEstimate() - c1.getEstimate()));
 			}

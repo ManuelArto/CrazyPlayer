@@ -15,17 +15,14 @@ public class TranspositionTable {
         private double value;
         private BoundType flag;
         private int depth;
-        private boolean turn;
-        StoredValue(double value, BoundType flag, int depth, boolean turn) {
+        StoredValue(double value, BoundType flag, int depth) {
             this.value = value;
             this.flag = flag;
             this.depth = depth;
-            this.turn = turn;
         }
         public double getValue() { return value; }
         public BoundType getFlag() { return flag; }
         public int getDepth() { return depth; }
-        public boolean getTurn() { return turn; }
     }
 
     private Map<String, StoredValue> table;
@@ -39,14 +36,14 @@ public class TranspositionTable {
         this.table = new HashMap();
     }
 
-    public void store(String boardState, double alpha, double beta, double value, int depth, boolean myTurn) {
+    public void store(String boardState, double alpha, double beta, double value, int depth) {
         StoredValue storedValue;
         if (value <= alpha)
-            storedValue = new StoredValue(value, BoundType.UPPERBOUND, depth, myTurn);
+            storedValue = new StoredValue(value, BoundType.UPPERBOUND, depth);
         else if (value >= beta)
-            storedValue = new StoredValue(value, BoundType.LOWERBOUND, depth, myTurn);
+            storedValue = new StoredValue(value, BoundType.LOWERBOUND, depth);
         else
-            storedValue = new StoredValue(value, BoundType.EXACT, depth, myTurn);
+            storedValue = new StoredValue(value, BoundType.EXACT, depth);
 
         table.put(boardState, storedValue);
 //        System.out.printf("BoardState: \n%s", formatBoardState(boardState));
@@ -57,7 +54,7 @@ public class TranspositionTable {
     public StoredValue get(MNKBoardEnhanced board) {
         String boardState = null;
         // TODO verificare se conviene calcolare ogni volta turned and mirrored board oppure clonare i valori
-        // TODO: ci sono problema più simmetrie
+        // TODO: ci sono più simmetrie credo
         // Ottimizzazione vs spazio
         if (M == N)
             boardState = findRotatedBoard(board.getBoardState());
@@ -169,8 +166,7 @@ public class TranspositionTable {
     }
 
 }
-/**
- *
+/*
  X  X  -				 -  -  X			  -  O  -			   -  -  -
  -  X  - ==> turn +90    O  X  X  && turn +90 -  X  -  && turn +90 X  X  O
  -  O  -				 -  -  -			  -  X  X			   X  -  -
