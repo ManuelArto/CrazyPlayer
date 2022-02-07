@@ -11,6 +11,7 @@ public class CrazyPlayer implements MNKPlayer {
 	private AIHelper ai;
 	private int M, N, K;
 	private MNKBoardEnhanced board;
+	private boolean debug = false;
 
 	@Override
 	public void initPlayer(int M, int N, int K, boolean first, int timeout_in_secs) {
@@ -44,13 +45,16 @@ public class CrazyPlayer implements MNKPlayer {
 		if (FC.length == 1)
 			return FC[0];
 
-		// ALPHABETA
 		MNKCell bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
+
+		// ALPHABETA
+		AIHelper.numberOfCalls = 0;
 		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
-//		ai.showSelectedCells(cells, MC);
+		if (debug)
+			ai.showSelectedCells(cells, MC);
 		for (MNKCellEstimate cell : cells) {
-			if (ai.isTimeEnded()) break;
+			if (ai.isTimeEnded() || bestEval == AIHelper.LARGE) break;
 
 			board.markCell(cell.i, cell.j);
 			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 10);
@@ -62,7 +66,8 @@ public class CrazyPlayer implements MNKPlayer {
 		}
 		board.markCell(bestCell.i, bestCell.j);
 
-//		ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
+		if (debug)
+			ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
 
 		return bestCell;
 	}
