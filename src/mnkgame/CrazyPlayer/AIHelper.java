@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 public class AIHelper {
     public static int numberOfCalls;
-    static final double LARGE = 1e3;
+    static final double LARGE = 1e4;
 
     private final int M, N, K;
     private final int timeout;
@@ -137,9 +137,15 @@ public class AIHelper {
                 System.out.printf(" %c ", col);
             System.out.println();
         }
+        System.out.println();
     }
 
     public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
+        // TT lookup
+//        TranspositionTable.StoredValue entry = transTable.get(board);
+//        if (entry != null && entry.getDepth() <= depth)
+//            return (entry.getTurn() == myTurn ? 1 : -1) * entry.getValue();
+
         MNKGameState state = board.gameState();
         if (state == MNKGameState.DRAW)
             return 0;
@@ -148,10 +154,7 @@ public class AIHelper {
         else if (blockAWin(board, lastCell))
             return (board.currentPlayer() != myPlayer ? 1 : -1) * LARGE / 10;
 
-        // qui euristiche su partita ancora aperta
-
-        return 0;
-
+        return findThreats(lastCell, board, board.getBoardState(), board.currentPlayer() != myPlayer);
     }
 
     private boolean blockAWin(MNKBoardEnhanced board, MNKCell lastCell) {
@@ -165,6 +168,38 @@ public class AIHelper {
     }
 
     // find threats
+    // posso hashmap quando accade un blockAWin so che l'avversario ha un k-1 open or half-open threat
+
+    /**
+     * k =  ±100, 	- k-1 = ±10, 	- k-2 = ±1
+     * open: k-1 estremità libere,
+     * half-open:
+     *     Type 2: k-1, 1 estremità libera
+     *     Type 4: k-1 jump e estremità libere
+     *     Type 5: k-1 jump e 1 estremità libera
+     *     Type 6: k-1 k-1 jump e 0 estremità libere
+     * 4 4 3 game
+     * - X - -
+     * X - O O
+     * - X - X
+     * X - O -
+     */
+
+    private int goodThreat = 0;
+    private int badThreat = 0;
+
+    private double findThreats(MNKCell lastCell, MNKBoardEnhanced board, MNKCellState[][] states, boolean myTurn) {
+
+        // check horizontal right
+        for (int j = lastCell.j; j >= 0 && j <= M-1; j++) {
+        }
+
+        // check vertically
+
+        // check diagonally
+
+        return goodThreat - badThreat ;
+    }
 
     public boolean isCellInBounds(MNKCell[] MC, MNKCell cell) {
         // TODO: check bound
@@ -188,7 +223,7 @@ public class AIHelper {
     }
 
     public void printPassedTimeAndMessage(String message) {
-        System.out.printf("Time: %d: %s%n\n", System.currentTimeMillis()-start, message);
+        System.out.printf("%s, Time: %d\n", message, System.currentTimeMillis()-start);
     }
 
     public int getTTSize() {

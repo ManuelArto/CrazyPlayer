@@ -19,14 +19,11 @@ public class CrazyPlayer implements MNKPlayer {
 		this.N = N;
 		this.K = K;
 		ai = new AIHelper(M, N, K, first, timeout_in_secs);
-		// TODO: check bound
 		board = new MNKBoardEnhanced(M, N, K);
 	}
 
 	@Override
 	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
-		// TODO: valutare aggiunta di try-catch
-
 		long start = System.currentTimeMillis();
 		ai.setStart(start);
 
@@ -67,9 +64,14 @@ public class CrazyPlayer implements MNKPlayer {
 		board.markCell(bestCell.i, bestCell.j);
 
 		if (debug)
-			ai.printPassedTimeAndMessage(String.format("Number of calls: %d, Size of TT: %d", AIHelper.numberOfCalls, ai.getTTSize()));
+			ai.printPassedTimeAndMessage(getInfos(cells, bestCell, 10));
 
 		return bestCell;
+	}
+
+	private String getInfos(TreeSet<MNKCellEstimate> cells, MNKCell bestCell, int depth) {
+		return String.format("Depth: %d, cells: %s, bestCell: %s \nNumber of calls: %d, Size of TT: %d",
+				depth, cells.size(), bestCell, AIHelper.numberOfCalls, ai.getTTSize());
 	}
 
 	@Override

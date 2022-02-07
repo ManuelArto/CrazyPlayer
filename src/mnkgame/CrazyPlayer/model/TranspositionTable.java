@@ -15,14 +15,17 @@ public class TranspositionTable {
         private double value;
         private BoundType flag;
         private int depth;
-        StoredValue(double value, BoundType flag, int depth) {
+        private boolean turn;
+        StoredValue(double value, BoundType flag, int depth, boolean turn) {
             this.value = value;
             this.flag = flag;
             this.depth = depth;
+            this.turn = turn;
         }
         public double getValue() { return value; }
         public BoundType getFlag() { return flag; }
         public int getDepth() { return depth; }
+        public boolean getTurn() { return turn; }
     }
 
     private Map<String, StoredValue> table;
@@ -39,11 +42,11 @@ public class TranspositionTable {
     public void store(String boardState, double alpha, double beta, double value, int depth, boolean myTurn) {
         StoredValue storedValue;
         if (value <= alpha)
-            storedValue = new StoredValue(value, BoundType.UPPERBOUND, depth);
+            storedValue = new StoredValue(value, BoundType.UPPERBOUND, depth, myTurn);
         else if (value >= beta)
-            storedValue = new StoredValue(value, BoundType.LOWERBOUND, depth);
+            storedValue = new StoredValue(value, BoundType.LOWERBOUND, depth, myTurn);
         else
-            storedValue = new StoredValue(value, BoundType.EXACT, depth);
+            storedValue = new StoredValue(value, BoundType.EXACT, depth, myTurn);
 
         table.put(boardState, storedValue);
 //        System.out.printf("BoardState: \n%s", formatBoardState(boardState));
