@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 public class AIHelper {
     public static int numberOfCalls;
-    static final double LARGE = 1e4;
+    static final double LARGE = 1e3;
 
     private final int M, N, K;
     private final int timeout;
@@ -31,18 +31,15 @@ public class AIHelper {
         this.transTable = new TranspositionTable(M, N, K);
     }
 
-    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEnhanced board, boolean myTurn) {
-        TreeSet<MNKCellEstimate> cells = new TreeSet(MNKCellEstimate.getCellComparator(myTurn));
+    public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEnhanced board, boolean asc) {
+        TreeSet<MNKCellEstimate> cells = new TreeSet(MNKCellEstimate.getCellComparator(asc));
         MNKCell[] MC = board.getMarkedCells();
         // O(n log n)
         for (MNKCell cell : FC) {
-            if (isTimeEnded())
-                break;
             if (!isCellInBounds(MC, cell))
                 continue;
 
             board.markCell(cell.i, cell.j);
-            // TODO: verifica se conviene TT lookup here
             double estimate = evaluate(board, cell);
             board.unmarkCell();
             // O(log n)
@@ -56,11 +53,7 @@ public class AIHelper {
         return cells;
     }
 
-    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int maxDepth) {
-        return alphabeta(board, estimate, myTurn, a, b, maxDepth, 0);
-    }
-
-    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myTurn, double a, double b, int maxDepth, int depth) {
+    public double alphabeta(MNKBoardEnhanced board, double estimate, boolean myNode, double a, double b, int depth) {
         // for debug
         numberOfCalls = numberOfCalls + 1;
 
@@ -68,7 +61,7 @@ public class AIHelper {
         // TranspositionTable Lookup
         TranspositionTable.StoredValue entry = transTable.get(board);
         String boardState = transTable.getCurrentBoardState();
-        if (entry != null && entry.getDepth() <= depth) {
+        if (entry != null && entry.getDepth() >= depth) {
             switch (entry.getFlag()) {
                 case EXACT:
                     return entry.getValue();
@@ -87,17 +80,17 @@ public class AIHelper {
 
         // situazione vantaggiosa/svantaggiosa totale
         if (Double.isInfinite(estimate))
-            return myTurn ? AIHelper.LARGE - depth : -AIHelper.LARGE + depth;
-        if (depth == maxDepth || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
+            return myNode ? AIHelper.LARGE : -AIHelper.LARGE;
+        if (depth == 0 || FC.length ==  0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
             return estimate;
 
-        TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myTurn);
+        TreeSet<MNKCellEstimate> cells = getBestMoves(FC, board, myNode);
         double eval;
-        if (myTurn) {
+        if (myNode) {
             eval = Double.POSITIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.min(eval, alphabeta(board, cell.getEstimate(), false, a, b, maxDepth, depth+1));
+                eval = Math.min(eval, alphabeta(board, cell.getEstimate(), false, a, b, depth-1));
                 board.unmarkCell();
                 b = Math.min(eval, b);
                 if (b <= a)             // a cutoff
@@ -107,7 +100,7 @@ public class AIHelper {
             eval = Double.NEGATIVE_INFINITY;
             for (MNKCellEstimate cell : cells) {
                 board.markCell(cell.i, cell.j);
-                eval = Math.max(eval, alphabeta(board, cell.getEstimate(), true, a, b, maxDepth, depth+1));
+                eval = Math.max(eval, alphabeta(board, cell.getEstimate(), true, a, b, depth-1));
                 board.unmarkCell();
                 a = Math.max(eval, a);
                 if (b <= a)             // b cutoff
@@ -116,20 +109,21 @@ public class AIHelper {
         }
 
         // TranspositionTable Store
-        transTable.store(boardState, aOrig, b, eval, depth, myTurn);
+        transTable.store(boardState, aOrig, b, eval, depth);
 
         return eval;
     }
 
-    // TODO: remove later
     public void showSelectedCells(TreeSet<MNKCellEstimate> cells, MNKCell[] MC) {
+        System.out.println(cells);
         char[][] board = new char[M][N];
         for (int row = 0; row < M; row++) {
             for (int col = 0; col < N; col++)
                 board[row][col] = '.';
         }
+        int i = 97;
         for (MNKCellEstimate cell : cells)
-            board[cell.i][cell.j] = '-';
+            board[cell.i][cell.j] = (char) i++; ;
         for (MNKCell cell : MC)
             board[cell.i][cell.j] = cell.state == MNKCellState.P1 ? 'X':'O';
         for (char[] row : board) {
@@ -137,10 +131,10 @@ public class AIHelper {
                 System.out.printf(" %c ", col);
             System.out.println();
         }
-        System.out.println();
     }
 
     public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
+        // TODO: verifica se conviene TT lookup here
         // TT lookup
 //        TranspositionTable.StoredValue entry = transTable.get(board);
 //        if (entry != null && entry.getDepth() <= depth)
@@ -203,7 +197,7 @@ public class AIHelper {
 
     public boolean isCellInBounds(MNKCell[] MC, MNKCell cell) {
         // TODO: check bound
-        int bound = M * N <= 1000 ? 1 : 2;
+        int bound = M * N <= 16 ? 1 : 1;
         for (MNKCell mc : MC) {
             boolean rowBound = (cell.i >= mc.i - bound && cell.i <= mc.i + bound);
             boolean colBound = (cell.j >= mc.j - bound && cell.j <= mc.j + bound);

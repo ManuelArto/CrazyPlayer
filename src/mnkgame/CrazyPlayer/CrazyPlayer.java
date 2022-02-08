@@ -42,36 +42,36 @@ public class CrazyPlayer implements MNKPlayer {
 		if (FC.length == 1)
 			return FC[0];
 
-		MNKCell bestCell = null;
+		MNKCellEstimate bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
 
 		// ALPHABETA
 		AIHelper.numberOfCalls = 0;
-		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, true);
+		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, false);
 		if (debug)
 			ai.showSelectedCells(cells, MC);
 		for (MNKCellEstimate cell : cells) {
 			if (ai.isTimeEnded() || bestEval == AIHelper.LARGE) break;
 
 			board.markCell(cell.i, cell.j);
-			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 10);
-			if (eval >= bestEval) {
+			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 5);
+			if (eval > bestEval) {
 				bestEval = eval;
 				bestCell = cell;
+				bestCell.setEstimate(eval);
 			}
 			board.unmarkCell();
 		}
 		board.markCell(bestCell.i, bestCell.j);
-
 		if (debug)
-			ai.printPassedTimeAndMessage(getInfos(cells, bestCell, 10));
+			ai.printPassedTimeAndMessage(getInfos(bestCell));
 
 		return bestCell;
 	}
 
-	private String getInfos(TreeSet<MNKCellEstimate> cells, MNKCell bestCell, int depth) {
-		return String.format("Depth: %d, cells: %s, bestCell: %s \nNumber of calls: %d, Size of TT: %d",
-				depth, cells.size(), bestCell, AIHelper.numberOfCalls, ai.getTTSize());
+	private String getInfos(MNKCellEstimate bestCell) {
+		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s",
+				AIHelper.numberOfCalls, ai.getTTSize(), bestCell);
 	}
 
 	@Override
