@@ -1,5 +1,6 @@
 package mnkgame.CrazyPlayer;
 
+import mnkgame.CrazyPlayer.Util.AIHelper;
 import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
 import mnkgame.CrazyPlayer.model.MNKCellEstimate;
 import mnkgame.MNKCell;
@@ -44,6 +45,8 @@ public class CrazyPlayer implements MNKPlayer {
 
 		MNKCellEstimate bestCell = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
+		// TODO: clear TT?
+//		ai.clearTT();
 
 		// ALPHABETA
 		AIHelper.numberOfCalls = 0;
@@ -51,6 +54,7 @@ public class CrazyPlayer implements MNKPlayer {
 		if (debug)
 			ai.showSelectedCells(cells, MC);
 		for (MNKCellEstimate cell : cells) {
+			// TODO: se bestEval = -LARGE e sono firstPlayer => fai una mossa a caso (enemy guadagna 2 invece che 3)
 			if (ai.isTimeEnded() || bestEval == AIHelper.LARGE) break;
 
 			board.markCell(cell.i, cell.j);
@@ -58,20 +62,19 @@ public class CrazyPlayer implements MNKPlayer {
 			if (eval > bestEval) {
 				bestEval = eval;
 				bestCell = cell;
-				bestCell.setEstimate(eval);
 			}
 			board.unmarkCell();
 		}
 		board.markCell(bestCell.i, bestCell.j);
 		if (debug)
-			ai.printPassedTimeAndMessage(getInfos(bestCell));
+			ai.printPassedTimeAndMessage(getInfos(bestCell, bestEval));
 
 		return bestCell;
 	}
 
-	private String getInfos(MNKCellEstimate bestCell) {
-		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s",
-				AIHelper.numberOfCalls, ai.getTTSize(), bestCell);
+	private String getInfos(MNKCellEstimate bestCell, double eval) {
+		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s, eval: %.1f",
+				AIHelper.numberOfCalls, ai.getTTSize(), bestCell, eval);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package mnkgame.CrazyPlayer;
+package mnkgame.CrazyPlayer.Util;
 
 import mnkgame.CrazyPlayer.model.MNKBoardEnhanced;
 import mnkgame.CrazyPlayer.model.MNKCellEstimate;
@@ -7,11 +7,14 @@ import mnkgame.MNKCell;
 import mnkgame.MNKCellState;
 import mnkgame.MNKGameState;
 
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class AIHelper {
     public static int numberOfCalls;
-    static final double LARGE = 1e3;
+    public static final double LARGE = 1e3;
 
     private final int M, N, K;
     private final int timeout;
@@ -60,7 +63,7 @@ public class AIHelper {
         double aOrig = a;
         // TranspositionTable Lookup
         TranspositionTable.StoredValue entry = transTable.get(board);
-        String boardState = transTable.getCurrentBoardState();
+        BitSet boardState = transTable.getCurrentBoardState();
         if (entry != null && entry.getDepth() >= depth) {
             switch (entry.getFlag()) {
                 case EXACT:
@@ -115,6 +118,11 @@ public class AIHelper {
     }
 
     public void showSelectedCells(TreeSet<MNKCellEstimate> cells, MNKCell[] MC) {
+        boolean showLetters = false; // change it if you want
+        showSelectedCells(cells, MC, false);
+    }
+
+    public void showSelectedCells(TreeSet<MNKCellEstimate> cells, MNKCell[] MC, boolean showLetters) {
         System.out.println(cells);
         char[][] board = new char[M][N];
         for (int row = 0; row < M; row++) {
@@ -123,7 +131,7 @@ public class AIHelper {
         }
         int i = 97;
         for (MNKCellEstimate cell : cells)
-            board[cell.i][cell.j] = (char) i++; ;
+            board[cell.i][cell.j] = showLetters ? '-' : (char) i++; ;
         for (MNKCell cell : MC)
             board[cell.i][cell.j] = cell.state == MNKCellState.P1 ? 'X':'O';
         for (char[] row : board) {
@@ -134,24 +142,23 @@ public class AIHelper {
     }
 
     public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
-        // TODO: verifica se conviene TT lookup here
-        // TT lookup
-//        TranspositionTable.StoredValue entry = transTable.get(board);
-//        if (entry != null && entry.getDepth() <= depth)
-//            return (entry.getTurn() == myTurn ? 1 : -1) * entry.getValue();
-
         MNKGameState state = board.gameState();
+        double eval;
         if (state == MNKGameState.DRAW)
-            return 0;
+            eval = 0;
         else if (state == myWin || state == yourWin)
-            return board.currentPlayer() != myPlayer ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+            eval = Double.POSITIVE_INFINITY;
         else if (blockAWin(board, lastCell))
-            return (board.currentPlayer() != myPlayer ? 1 : -1) * LARGE / 10;
+            eval = LARGE / 10;
+        else
+            eval = findThreats(board, lastCell, board.getBoardState().clone());
 
-        return findThreats(lastCell, board, board.getBoardState(), board.currentPlayer() != myPlayer);
+        return board.currentPlayer() != myPlayer ? eval : (-eval + 0.0);
     }
 
     private boolean blockAWin(MNKBoardEnhanced board, MNKCell lastCell) {
+        if (board.getMarkedCells().length < (K-1)*2)
+            return false;
         board.unmarkCell();
         board.switchPlayer();
         MNKGameState state = board.markCell(lastCell.i, lastCell.j);
@@ -161,42 +168,60 @@ public class AIHelper {
         return (state == yourWin || state == myWin);
     }
 
-    // find threats
-    // posso hashmap quando accade un blockAWin so che l'avversario ha un k-1 open or half-open threat
+    public double findThreats(MNKBoardEnhanced board, MNKCell lastCell, MNKCellState[][] boardState) {
+        int newThreat = 0; // k-1 e k-2 threats creati da lastCell
+        int blockThreat = 0;  // k-2 threat nemici bloccati da lastCell (con jump)
 
-    /**
-     * k =  ±100, 	- k-1 = ±10, 	- k-2 = ±1
-     * open: k-1 estremità libere,
-     * half-open:
-     *     Type 2: k-1, 1 estremità libera
-     *     Type 4: k-1 jump e estremità libere
-     *     Type 5: k-1 jump e 1 estremità libera
-     *     Type 6: k-1 k-1 jump e 0 estremità libere
-     * 4 4 3 game
-     * - X - -
-     * X - O O
-     * - X - X
-     * X - O -
-     */
+        Set<Integer> checkCells = new HashSet<>();
+        checkCells.add(BitBoard.mapToMatrixIndex(lastCell.i, lastCell.j, N));
 
-    private int goodThreat = 0;
-    private int badThreat = 0;
+        MNKCellState myState = board.lastPlayer() == 0 ? MNKCellState.P1 : MNKCellState.P2;
+        MNKCellState enemyState = board.currentPlayer() == 0 ? MNKCellState.P1 : MNKCellState.P2;
+        for (int i = lastCell.i - 1; i <= lastCell.i + 1; i++) {
+            if (i < 0 || i >= M)
+                continue;
+            for (int j = lastCell.j - 1; j <= lastCell.j + 1; j++) {
+                if (j < 0 || j >= N)
+                    continue;
+                if (checkCells.contains(BitBoard.mapToMatrixIndex(i, j, N)) || boardState[i][j] == MNKCellState.FREE)
+                    continue;
 
-    private double findThreats(MNKCell lastCell, MNKBoardEnhanced board, MNKCellState[][] states, boolean myTurn) {
+                int lenT = findLenThreat(boardState, boardState[i][j], i, j, lastCell.i, lastCell.j);
+                // check in opposite direction if possible
+                int prev_i = getNextDirectionIndex(i, lastCell.i);
+                int prev_j = getNextDirectionIndex(j, lastCell.j);
+                if (prev_i >= 0 && prev_i < M &&
+                    prev_j >= 0 && prev_j < N &&
+                    boardState[prev_i][prev_j] == boardState[i][j]) {
+                    lenT += findLenThreat(boardState, boardState[prev_i][prev_j], prev_i, prev_j, lastCell.i, lastCell.j);
+                    checkCells.add(BitBoard.mapToMatrixIndex(prev_i, prev_j, N));
+                }
 
-        // check horizontal right
-        for (int j = lastCell.j; j >= 0 && j <= M-1; j++) {
+                if (boardState[i][j] == myState && lenT+1 == K - 1)
+                    newThreat += 10;
+                else if (boardState[i][j] == myState && lenT+1 == K - 2)
+                    newThreat += 1;
+                else if(boardState[i][j] == enemyState && lenT == K - 2)
+                    blockThreat += 5;
+            }
         }
 
-        // check vertically
+        return newThreat + blockThreat;
+    }
 
-        // check diagonally
+    private int findLenThreat(MNKCellState[][] board, MNKCellState state, int i, int j, int prev_i, int prev_j) {
+        if (i < 0 || i >= M || j < 0 || j >= N || board[i][j] != state)
+            return 0;
+        else
+            return 1 + findLenThreat(board, state, getNextDirectionIndex(prev_i, i), getNextDirectionIndex(prev_j, j), i, j);
+    }
 
-        return goodThreat - badThreat ;
+    private int getNextDirectionIndex(int prev_coord, int coord) {
+        return coord + (coord - prev_coord);
     }
 
     public boolean isCellInBounds(MNKCell[] MC, MNKCell cell) {
-        // TODO: check bound
+        // TODO: check bound 1 o 2
         int bound = M * N <= 16 ? 1 : 1;
         for (MNKCell mc : MC) {
             boolean rowBound = (cell.i >= mc.i - bound && cell.i <= mc.i + bound);
@@ -213,11 +238,16 @@ public class AIHelper {
     }
 
     public boolean isTimeEnded() {
-        return (System.currentTimeMillis()-start) / 1000.0 > timeout*(99.0/100.0);
+        return false;
+//        return (System.currentTimeMillis()-start) / 1000.0 > timeout*(99.0/100.0);
     }
 
     public void printPassedTimeAndMessage(String message) {
         System.out.printf("%s, Time: %d\n", message, System.currentTimeMillis()-start);
+    }
+
+    public void clearTT() {
+        transTable.clear();
     }
 
     public int getTTSize() {
