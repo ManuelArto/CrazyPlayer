@@ -7,6 +7,7 @@ import mnkgame.MNKCell;
 import mnkgame.MNKPlayer;
 
 import java.util.TreeSet;
+import java.util.concurrent.TimeoutException;
 
 public class CrazyPlayer implements MNKPlayer {
 	private AIHelper ai;
@@ -43,38 +44,42 @@ public class CrazyPlayer implements MNKPlayer {
 		if (FC.length == 1)
 			return FC[0];
 
+
 		MNKCellEstimate bestCell = null;
-		double bestEval = Double.NEGATIVE_INFINITY;
-		// TODO: clear TT?
-//		ai.clearTT();
+		int depth = 1;
+		try {
+			// O(n log n)
+			MNKCell[] closedCells = ai.getClosedCells(MC, board.getBoardState());
+			TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
+			if (debug) 	ai.showSelectedCells(cells, MC);
+			// O() Iterative Deepening
+			for (; depth <= FC.length && depth <= 10; depth++) {
+				if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE ||
+				   (ai.isTimeEnded()))
+					break;
 
-		// ALPHABETA
-		AIHelper.numberOfCalls = 0;
-		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(FC, board, false);
-		if (debug)
-			ai.showSelectedCells(cells, MC);
-		for (MNKCellEstimate cell : cells) {
-			// TODO: se bestEval = -LARGE e sono firstPlayer => fai una mossa a caso (enemy guadagna 2 invece che 3)
-			if (ai.isTimeEnded() || bestEval == AIHelper.LARGE) break;
-
-			board.markCell(cell.i, cell.j);
-			double eval = ai.alphabeta(board, cell.getEstimate(), true, -AIHelper.LARGE, AIHelper.LARGE, 5);
-			if (eval > bestEval) {
-				bestEval = eval;
-				bestCell = cell;
+				MNKCellEstimate res = ai.alphabeta(board, cells, depth);
+				bestCell = res;
 			}
-			board.unmarkCell();
+		} catch (TimeoutException e) {
+//			e.printStackTrace();
+			for (int i = board.getFreeCells().length; i < FC.length; i++)
+				board.unmarkCell();
 		}
+
 		board.markCell(bestCell.i, bestCell.j);
-		if (debug)
-			ai.printPassedTimeAndMessage(getInfos(bestCell, bestEval));
+		if (debug) 	ai.printPassedTimeAndMessage(getInfos(bestCell, depth));
+
+		// TODO: clear TT?
+//		if (ai.canClearTT())
+//			ai.clearTT();
 
 		return bestCell;
 	}
 
-	private String getInfos(MNKCellEstimate bestCell, double eval) {
-		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s, eval: %.1f",
-				AIHelper.numberOfCalls, ai.getTTSize(), bestCell, eval);
+	private String getInfos(MNKCellEstimate bestCell, int depth) {
+		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s, Reached Depth: %d",
+				AIHelper.numberOfCalls, ai.getTTSize(), bestCell, depth);
 	}
 
 	@Override

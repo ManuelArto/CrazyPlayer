@@ -59,6 +59,7 @@ public class TranspositionTable {
     }
 
     public StoredValue get(MNKBoardEnhanced board) {
+        // TODO: altre simmetrie, guarda rotazioni con bitboard
         // TODO: O()
         BitSet bitBoard = null;
         if (M == N)

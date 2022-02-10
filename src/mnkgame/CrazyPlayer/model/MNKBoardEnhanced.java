@@ -10,10 +10,6 @@ public class MNKBoardEnhanced extends MNKBoard {
 		super(M, N, K);
 	}
 
-	public void switchPlayer() {
-		currentPlayer = (currentPlayer + 1) % 2;
-	}
-
 	public int lastPlayer() {
 		return (currentPlayer + 1) % 2;
 	}
