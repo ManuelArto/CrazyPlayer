@@ -207,8 +207,6 @@ public class AIHelper {
                 }
 
                 if (boardState[i][j] == myState) {
-                    if (lenT == K)
-                        return Double.POSITIVE_INFINITY;
                     if (lenT == K - 1)
                         newThreat += 10;
                     else if (lenT == K - 2)
