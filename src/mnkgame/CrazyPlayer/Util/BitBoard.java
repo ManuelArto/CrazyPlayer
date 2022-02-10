@@ -46,11 +46,11 @@ public class BitBoard {
 		return null;
 	}
 
-	public static BitSet findRotatedBoard(Map table, MNKCellState[][] board, int M, int N) {
-		// clone board
-		MNKCellState[][] rotBoard = new MNKCellState[M][N];
+	public static BitSet findRotatedBoard(Map table, MNKCellState[][] board, int M) {
+		// clone board O(M^2)
+		MNKCellState[][] rotBoard = new MNKCellState[M][M];
 		for (int i = 0; i < M; i++) {
-			for (int j = 0; j < N; j++)
+			for (int j = 0; j < M; j++)
 				rotBoard[i][j] = board[i][j];
 		}
 
@@ -59,7 +59,7 @@ public class BitBoard {
 		while (rotationNumber < 3) {
 			// Trova trasposta
 			for (int i = 0; i < M; i++) {
-				for (int j = i; j < N; j++) {
+				for (int j = i; j < M; j++) {
 					MNKCellState temp = rotBoard[i][j];
 					rotBoard[i][j] = rotBoard[j][i];
 					rotBoard[j][i] = temp;
@@ -67,7 +67,7 @@ public class BitBoard {
 			}
 			// swap columns
 			for (int i = 0; i < M; i++) {
-				int low = 0, high = N - 1;
+				int low = 0, high = M - 1;
 				while (low < high) {
 					MNKCellState temp = rotBoard[i][low];
 					rotBoard[i][low] = rotBoard[i][high];
@@ -77,7 +77,7 @@ public class BitBoard {
 				}
 			}
 
-			BitSet bitBoard = convertToBitBoard(rotBoard, M, N);
+			BitSet bitBoard = convertToBitBoard(rotBoard, M, M);
 			if (table.containsKey(bitBoard))
 				return bitBoard;
 			rotationNumber++;

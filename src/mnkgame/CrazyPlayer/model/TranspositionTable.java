@@ -59,10 +59,10 @@ public class TranspositionTable {
     }
 
     public StoredValue get(MNKBoardEnhanced board) {
+        // TODO: O()
         BitSet bitBoard = null;
-        // TODO verificare se conviene calcolare ogni volta turned and mirrored board oppure clonare i valori
         if (M == N)
-            bitBoard = BitBoard.findRotatedBoard(table, board.getBoardState(), M, N);
+            bitBoard = BitBoard.findRotatedBoard(table, board.getBoardState(), M);
         if (bitBoard == null)
             bitBoard = BitBoard.findMirrorBoard(table, board.getBoardState(), M, N);
         if (bitBoard == null)
