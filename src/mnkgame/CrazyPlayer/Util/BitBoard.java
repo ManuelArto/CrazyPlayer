@@ -48,6 +48,7 @@ public class BitBoard {
 		return null;
 	}
 
+	// O(M^2)
 	public static BitSet findRotatedBoard(Map table, MNKCellState[][] board, int M) {
 		// clone board O(M^2)
 		MNKCellState[][] rotBoard = new MNKCellState[M][M];
@@ -60,6 +61,7 @@ public class BitBoard {
 		int rotationNumber = 0;
 		while (rotationNumber < 3) {
 			// Trova trasposta
+			// O(M^2)
 			for (int i = 0; i < M; i++) {
 				for (int j = i; j < M; j++) {
 					MNKCellState temp = rotBoard[i][j];
@@ -68,6 +70,7 @@ public class BitBoard {
 				}
 			}
 			// swap columns
+			// O(M^2)
 			for (int i = 0; i < M; i++) {
 				int low = 0, high = M - 1;
 				while (low < high) {
