@@ -55,9 +55,9 @@ public class TranspositionTable {
         table.put(bitBoard, storedValue);
     }
 
+    // TODO: ()
     public StoredValue get(MNKBoardEnhanced board) {
-        // TODO: altre simmetrie, guarda rotazioni con bitboard
-        // TODO: O()
+        // TODO: Rotazioni con bitboard
         BitSet bitBoard = null;
         if (M == N)
             bitBoard = BitBoard.findRotatedBoard(table, board.getBoardState(), M);

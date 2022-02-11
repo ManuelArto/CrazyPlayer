@@ -28,6 +28,7 @@ public class BitBoard {
 	}
 
 	public static BitSet findMirrorBoard(Map table, MNKCellState[][] board, int M, int N) {
+		// TODO: missing diagonals mirror
 		MNKCellState[][] horMirrBoard = new MNKCellState[M][N];
 		MNKCellState[][] verMirrBoard = new MNKCellState[M][N];
 		for (int i = 0; i < M; i++) {

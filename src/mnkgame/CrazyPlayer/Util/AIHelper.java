@@ -33,6 +33,7 @@ public class AIHelper {
         this.transTable = new TranspositionTable(M, N, K);
     }
 
+    // O(n)
     public MNKCellEstimate alphabeta(MNKBoardEnhanced board, TreeSet<MNKCellEstimate> cells, int depth) throws TimeoutException {
         MNKCellEstimate bestCell = null;
         double bestEval = Double.NEGATIVE_INFINITY;
@@ -52,11 +53,12 @@ public class AIHelper {
         return bestCell;
     }
 
+    // TODO: O() AlphaBetaPruning with memoization TT
     private double alphabeta(MNKBoardEnhanced board, double estimate, boolean myNode, double a, double b, int depth) throws TimeoutException {
         // for debug
         numberOfCalls = numberOfCalls + 1;
 
-        // situazione vantaggiosa/svantaggiosa totale
+        // situazione vantaggiosa totale
         if (Double.isInfinite(estimate))
             return myNode ? AIHelper.LARGE : -AIHelper.LARGE;
         if (depth == 0 || board.gameState() != MNKGameState.OPEN || isTimeEnded())
@@ -64,7 +66,6 @@ public class AIHelper {
 
         double aOrig = a;
         // TranspositionTable Lookup
-        // O()
         TranspositionTable.StoredValue entry = transTable.get(board);
         BitSet boardState = transTable.getCurrentBoardState();
         if (entry != null && entry.getDepth() >= depth) {
@@ -113,9 +114,10 @@ public class AIHelper {
         return eval;
     }
 
+    // O(n log n)
     public TreeSet<MNKCellEstimate> getBestMoves(MNKCell[] FC, MNKBoardEnhanced board, boolean asc) throws TimeoutException {
         TreeSet<MNKCellEstimate> cells = new TreeSet(MNKCellEstimate.getCellComparator(asc));
-        // O(n log n)
+        // O(n)
         for (MNKCell cell : FC) {
             isTimeEnded();
 
@@ -125,11 +127,10 @@ public class AIHelper {
             // O(log n)
             cells.add(new MNKCellEstimate(cell.i, cell.j, estimate));
             // non ha senso procedere con il calcolo dell'estimate per le altre celle se mi accorgo di essere
-            // in una situazione vantaggiosa/svantaggiosa totale
+            // in una situazione vantaggiosa totale
             if (Double.isInfinite(estimate))
                 break;
         }
-//        this.printPassedTimeAndMessage(cells.toString());
         return cells;
     }
 

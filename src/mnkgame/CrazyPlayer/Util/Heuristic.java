@@ -22,6 +22,7 @@ public class Heuristic {
 		yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
 	}
 
+	// TODO: O(8 * K)
 	public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
 		MNKGameState state = board.gameState();
 		double eval;
@@ -35,9 +36,10 @@ public class Heuristic {
 		return board.currentPlayer() != myPlayer ? eval : (-eval + 0.0);
 	}
 
+	// TODO: O(8 * K)
 	private double findThreats(MNKBoardEnhanced board, MNKCell lastCell, MNKCellState[][] boardState) {
-		int newThreat = 0; // k-1 e k-2 threats creati da lastCell
-		int blockThreat = 0;  // k-2 threat nemici bloccati da lastCell (con jump)
+		int newThreat = 0; // evaluate su threats creati da lastCell
+		int blockThreat = 0;  // evaluate su threats avversari bloccati da lastCell
 
 		Set<Integer> checkCells = new HashSet<>();
 		checkCells.add(BitBoard.mapToMatrixIndex(lastCell.i, lastCell.j, N));
@@ -58,10 +60,11 @@ public class Heuristic {
 
 				boolean[] openOuter = {false, false};
 
-				// check in opposite direction if possible
+				// check in opposite direction too
 				int prev_i = getNextDirectionIndex(i, lastCell.i);
 				int prev_j = getNextDirectionIndex(j, lastCell.j);
 
+				// O(K)
 				int lenT = 1 + findLenThreat(boardState, boardState[i][j], i, j, lastCell.i, lastCell.j, openOuter);
 
 				if (prev_i >= 0 && prev_i < M && prev_j >= 0 && prev_j < N) {
@@ -79,14 +82,14 @@ public class Heuristic {
 						newThreat += 50;
 					else if (lenT == K - 1 && (openOuter[0] || openOuter[1]))    // gioca se non è close-type
 						newThreat += 25;
-					else if (lenT == K - 2 && (openOuter[0] && openOuter[1]))
+					else if (lenT == K - 2 && (openOuter[0] && openOuter[1]))	 // open type
 						newThreat += 10;
-					else if (lenT == K - 2 && (openOuter[0] || openOuter[1]))
+					else if (lenT == K - 2 && (openOuter[0] || openOuter[1]))	// half-open
 						newThreat += 5;
-					else
+					else														// sommo la lunghezza del threat trovato
 						newThreat += lenT;
 				} else {
-					if (lenT == K)          // blocca vittoria
+					if (lenT == K)          									// blocca vittoria
 						return AIHelper.LARGE / 10;
 					else if (lenT == K - 1 && (openOuter[0] && openOuter[1]))   // blocca doppia mossa
 						blockThreat += (myState == MNKCellState.P1) ? 25 : 50;
@@ -99,6 +102,7 @@ public class Heuristic {
 		return newThreat + blockThreat;
 	}
 
+	// O(K)
 	private int findLenThreat(MNKCellState[][] board, MNKCellState state, int i, int j, int prev_i, int prev_j, boolean[] openOuter) {
 		if (i < 0 || i >= M || j < 0 || j >= N)
 			return 0;

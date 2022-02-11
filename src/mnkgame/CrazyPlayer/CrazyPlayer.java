@@ -44,15 +44,13 @@ public class CrazyPlayer implements MNKPlayer {
 		if (FC.length == 1)
 			return FC[0];
 
-
 		MNKCellEstimate bestCell = null;
 		int depth = 1;
 		try {
-			// O(n log n)
 			MNKCell[] closedCells = ai.getClosedCells(MC, board.getBoardState());
 			TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
 			if (debug) 	ai.showSelectedCells(cells, MC);
-			// O() Iterative Deepening
+			// TODO: O() Iterative Deepening
 			for (; depth <= FC.length && depth <= AIHelper.DEPTH_LIMIT; depth++) {
 				if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE ||
 				   (ai.isTimeEnded()))
