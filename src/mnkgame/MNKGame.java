@@ -151,7 +151,7 @@ public class MNKGame extends JFrame {
 
 					try { 
 						// TIMEOUT secs + 10% more time
-  					c = task.get((int)(TIMEOUT+0.1*TIMEOUT), TimeUnit.SECONDS);
+  					c = task.get((int)(TIMEOUT+0.1*TIMEOUT), TimeUnit.SECONDS); 
 					}
 					catch(TimeoutException ex) {
 						executor.shutdownNow();	
@@ -221,7 +221,7 @@ public class MNKGame extends JFrame {
 					executor.shutdown();
 					try { 
 						// TIMEOUT secs + 10% more time
- 			 			future.get((int)(TIMEOUT + 0.1*TIMEOUT), TimeUnit.DAYS);
+ 			 			future.get((int)(TIMEOUT + 0.1*TIMEOUT), TimeUnit.SECONDS); 
 					} 
 					catch (TimeoutException e) {
 						System.err.println("Error: " + ComPlayer[i].playerName() + " interrupted: initialization takes too much time");
