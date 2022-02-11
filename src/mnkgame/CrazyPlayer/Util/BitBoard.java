@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class BitBoard {
 
+	// O(M * N)
 	public static BitSet convertToBitBoard(MNKCellState[][] board, int M, int N) {
 		// bitBoard = bitBoardP1 + bitBoardP2
 		// e.g. 100100010 + 000010001
@@ -27,8 +28,8 @@ public class BitBoard {
 		return bitBoard;
 	}
 
+	// O(M * N)
 	public static BitSet findMirrorBoard(Map table, MNKCellState[][] board, int M, int N) {
-		// TODO: missing diagonals mirror
 		MNKCellState[][] horMirrBoard = new MNKCellState[M][N];
 		MNKCellState[][] verMirrBoard = new MNKCellState[M][N];
 		for (int i = 0; i < M; i++) {
@@ -78,6 +79,7 @@ public class BitBoard {
 				}
 			}
 
+			// O(M * N)
 			BitSet bitBoard = convertToBitBoard(rotBoard, M, M);
 			if (table.containsKey(bitBoard))
 				return bitBoard;

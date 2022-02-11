@@ -50,7 +50,7 @@ public class CrazyPlayer implements MNKPlayer {
 			MNKCell[] closedCells = ai.getClosedCells(MC, board.getBoardState());
 			TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
 			if (debug) 	ai.showSelectedCells(cells, MC);
-			// TODO: O() Iterative Deepening
+			// Iterative Deepening O(b^depth) dove b = branching factor
 			for (; depth <= FC.length && depth <= AIHelper.DEPTH_LIMIT; depth++) {
 				if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE ||
 				   (ai.isTimeEnded()))

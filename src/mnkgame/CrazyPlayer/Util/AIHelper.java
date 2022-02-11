@@ -33,11 +33,12 @@ public class AIHelper {
         this.transTable = new TranspositionTable(M, N, K);
     }
 
-    // O(n)
+    // O(n * √(m^d))
     public MNKCellEstimate alphabeta(MNKBoardEnhanced board, TreeSet<MNKCellEstimate> cells, int depth) throws TimeoutException {
         MNKCellEstimate bestCell = null;
         double bestEval = Double.NEGATIVE_INFINITY;
         AIHelper.numberOfCalls = 0;
+        // O(n)
         for (MNKCellEstimate cell : cells) {
             if (isTimeEnded() || bestEval == AIHelper.LARGE) break;
 
@@ -53,7 +54,7 @@ public class AIHelper {
         return bestCell;
     }
 
-    // TODO: O() AlphaBetaPruning with memoization TT
+    // O(√(m^d))
     private double alphabeta(MNKBoardEnhanced board, double estimate, boolean myNode, double a, double b, int depth) throws TimeoutException {
         // for debug
         numberOfCalls = numberOfCalls + 1;

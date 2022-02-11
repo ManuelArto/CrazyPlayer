@@ -22,7 +22,6 @@ public class Heuristic {
 		yourWin = first ? MNKGameState.WINP2 : MNKGameState.WINP1;
 	}
 
-	// TODO: O(8 * K)
 	public double evaluate(MNKBoardEnhanced board, MNKCell lastCell) {
 		MNKGameState state = board.gameState();
 		double eval;
@@ -36,7 +35,7 @@ public class Heuristic {
 		return board.currentPlayer() != myPlayer ? eval : (-eval + 0.0);
 	}
 
-	// TODO: O(8 * K)
+	// O(8K)
 	private double findThreats(MNKBoardEnhanced board, MNKCell lastCell, MNKCellState[][] boardState) {
 		int newThreat = 0; // evaluate su threats creati da lastCell
 		int blockThreat = 0;  // evaluate su threats avversari bloccati da lastCell

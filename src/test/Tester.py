@@ -1,17 +1,17 @@
 import os
 from datetime import datetime
 
-COMMAND = "java mnkgame.MNKPlayerTesterCustom 3 3 3 {} {}"
+COMMAND = "java mnkgame.MNKPlayerTesterCustom 7 7 7 {} {}"
 DIR = "/home/manuel/Scuola/UNI/1 Anno/2Semestre/Algoritmi e Strutture Dati/progetto/MNKGame/bin/"
 
 first_player = "mnkgame.CrazyPlayer.CrazyPlayer"
-enemy = "mnkgame.QuasiRandomPlayer"
-# enemy = "mnkgame.CrazyPlayer.CrazyPlayer"
-# enemy = "mnkgame.ENEMY1"
-# enemy = "mnkgame.monkey.ENEMY2"
+# enemy = "mnkgame.QuasiRandomPlayer"
+enemy = "mnkgame.CrazyPlayer.CrazyPlayer"
+# enemy = "mnkgame.Enemy.ENEMY1"
+# enemy = "mnkgame.Enemy.ENEMY2"
 
 print(f"{datetime.now()}: {first_player.split('.')[-1]} vs {enemy.split('.')[-1]}\n")
-input("Insert Local Changes: ")
+# input("Insert Local Changes: ")
 
 os.chdir(DIR)
 os.system(COMMAND.format(first_player, enemy))
@@ -66,13 +66,8 @@ os.system(COMMAND.format(first_player, enemy))
 #   P2 = 2+2+2+2+2+1+2+2+2+2+1+2+2+2+2+0+2+2+1+2+2+0+2 = 39
 # 2022-02-11 11:54:11.226947: CrazyPlayer vs ENEMY2
 #   Local changes: default
-#   P1 = 2+2+2+2+2+3+2+2+2+2+4+2+3+2+2+5+2+3+3+2+2+5+4 =
-#   P2 = 2+2+2+2+2+1+2+2+2+2+1+2+1+2+2+0+2+1+1+2+2+0+1
-
-
-
-
-
+#   P1 = 2+2+2+2+2+3+2+2+2+2+4+2+3+2+2+5+2+3+3+2+2+5+4+5+3 = 68
+#   P2 = 2+2+2+2+2+1+2+2+2+2+1+2+1+2+2+0+2+1+1+2+2+0+1+0+3 = 39
 
 # ENEMY1 vs ENEMY2
 # NO DATE

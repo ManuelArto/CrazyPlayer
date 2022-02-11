@@ -55,7 +55,7 @@ public class TranspositionTable {
         table.put(bitBoard, storedValue);
     }
 
-    // TODO: ()
+    // O (M*N)
     public StoredValue get(MNKBoardEnhanced board) {
         // TODO: Rotazioni con bitboard
         BitSet bitBoard = null;

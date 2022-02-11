@@ -301,7 +301,6 @@ public class MNKPlayerTesterCustom {
 			int P1SCORE = 0;
 			int P2SCORE = 0;
 			for(int i = 0; i < ROUNDS*2; i++) {
-				// TODO: EDIT
 				if (i > 0) {
 					MNKPlayer temp = Player[0];
 					Player[0] = Player[1];
