@@ -53,9 +53,6 @@ public class TranspositionTable {
             storedValue = new StoredValue(value, BoundType.EXACT, depth);
 
         table.put(bitBoard, storedValue);
-//        System.out.printf("BoardState: \n%s", formatBoardState(boardState));
-//        System.out.printf("Value: %f, Type: %s, Depth: %d, MyTurn: %b\n\n",
-//                storedValue.getValue(), storedValue.getFlag(), storedValue.getDepth(), myTurn);
     }
 
     public StoredValue get(MNKBoardEnhanced board) {

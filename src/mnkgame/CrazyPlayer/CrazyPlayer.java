@@ -53,7 +53,7 @@ public class CrazyPlayer implements MNKPlayer {
 			TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
 			if (debug) 	ai.showSelectedCells(cells, MC);
 			// O() Iterative Deepening
-			for (; depth <= FC.length && depth <= 10; depth++) {
+			for (; depth <= FC.length && depth <= AIHelper.DEPTH_LIMIT; depth++) {
 				if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE ||
 				   (ai.isTimeEnded()))
 					break;
@@ -70,9 +70,8 @@ public class CrazyPlayer implements MNKPlayer {
 		board.markCell(bestCell.i, bestCell.j);
 		if (debug) 	ai.printPassedTimeAndMessage(getInfos(bestCell, depth));
 
-		// TODO: clear TT?
-//		if (ai.canClearTT())
-//			ai.clearTT();
+		if (ai.canClearTT())
+			ai.clearTT();
 
 		return bestCell;
 	}
