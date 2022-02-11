@@ -22,16 +22,9 @@
 
 package mnkgame;
 
-import java.util.List;
 import java.util.ArrayList;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.concurrent.*;
 
 
 /**
@@ -49,14 +42,10 @@ import java.util.concurrent.Callable;
  * &nbsp;&nbsp;-v &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Verbose
  * </p>
  */
-public class MNKPlayerTester {
+public class MNKPlayerTesterCustom {
 	private static int     TIMEOUT = 10;
 	private static int     ROUNDS  = 1;
 	private static boolean VERBOSE = false;
-
-	private static int     M;
-	private static int     N;
-	private static int     K;
 
 	private static MNKBoard B;
 
@@ -74,17 +63,17 @@ public class MNKPlayerTester {
 	}
 
 
-	private MNKPlayerTester() {
+	private MNKPlayerTesterCustom() {
 	}
 
 
-	private static void initGame() {
+	private static void initGame(int M, int N, int K) {
 		if(VERBOSE) System.out.println("Initializing " + M + "," + N + "," + K + " board");
 		B = new MNKBoard(M,N,K);
 		// Timed-out initializaton of the MNKPlayers
 		for(int k = 0; k < 2; k++) {
 			if(VERBOSE) if(VERBOSE) System.out.println("Initializing " + Player[k].playerName() + " as Player " + (k+1));
-			final int i = k; // need to have a final variable here
+			final int i = k; // need to have a final variable here 
 			final Runnable initPlayer = new Thread() {
 				@Override
 				public void run() {
@@ -223,36 +212,36 @@ public class MNKPlayerTester {
 					}
 					break;
 				default:
-					L.add(args[i]);
+				  L.add(args[i]);
 			}
 		}
 
 		int n = L.size();
 		if(n != 5)
 			throw new IllegalArgumentException("Missing arguments:" + (n < 1 ? " <M>" : "") + (n < 2 ? " <N>" : "") +
-					(n < 3 ? " <K>" : "") + (n < 4 ? " <MNKPlayer class>" : "") + (n < 5 ? " <MNKPlayer class>" : ""));
+			  (n < 3 ? " <K>" : "") + (n < 4 ? " <MNKPlayer class>" : "") + (n < 5 ? " <MNKPlayer class>" : ""));
 
-		try {
-			M  = Integer.parseInt(L.get(0));
-		}
-		catch(NumberFormatException e) {
-			throw new IllegalArgumentException("Illegal integer format for M argument: " + M);
-		}
-		try {
-			N  = Integer.parseInt(L.get(1));
-		}
-		catch(NumberFormatException e) {
-			throw new IllegalArgumentException("Illegal integer format for N argument: " + N);
-		}
-		try {
-			K  = Integer.parseInt(L.get(2));
-		}
-		catch(NumberFormatException e) {
-			throw new IllegalArgumentException("Illegal integer format for N argument: " + K);
-		}
-
-		if(M <= 0 || N <= 0 || K <= 0)
-			throw new IllegalArgumentException("Arguments  M, N, K must be larger than 0");
+//		try {
+//			M  = Integer.parseInt(L.get(0));
+//		}
+//		catch(NumberFormatException e) {
+//			throw new IllegalArgumentException("Illegal integer format for M argument: " + M);
+//		}
+//		try {
+//			N  = Integer.parseInt(L.get(1));
+//		}
+//		catch(NumberFormatException e) {
+//			throw new IllegalArgumentException("Illegal integer format for N argument: " + N);
+//		}
+//		try {
+//			K  = Integer.parseInt(L.get(2));
+//		}
+//		catch(NumberFormatException e) {
+//			throw new IllegalArgumentException("Illegal integer format for N argument: " + K);
+//		}
+//
+//		if(M <= 0 || N <= 0 || K <= 0)
+//			throw new IllegalArgumentException("Arguments  M, N, K must be larger than 0");
 
 		String[] P = {L.get(3),L.get(4)};
 		for(int i = 0; i < 2; i++) {
@@ -261,17 +250,17 @@ public class MNKPlayerTester {
 			}
 			catch(ClassNotFoundException e) {
 				throw new IllegalArgumentException("Illegal argument: \'" + P[i] + "\' class not found");
-			}
-			catch(ClassCastException e) {
+      }
+      catch(ClassCastException e) {
 				throw new IllegalArgumentException("Illegal argument: \'" + P[i] + "\' class does not implement the MNKPlayer interface");
-			}
-			catch(NoSuchMethodException e) {
+      }
+      catch(NoSuchMethodException e) {
 				throw new IllegalArgumentException("Illegal argument: \'" + P[i] + "\' class constructor needs to be empty");
-			}
+      }
 			catch(Exception e) {
 				throw new IllegalArgumentException("Illegal argument: \'" + P[i] + "\' class (unexpected exception) " + e);
 			}
-		}
+    }
 	}
 
 	private static void printUsage() {
@@ -283,8 +272,6 @@ public class MNKPlayerTester {
 	}
 
 	public static void main(String[] args) {
-		int P1SCORE = 0;
-		int P2SCORE = 0;
 
 		if(args.length == 0) {
 			printUsage();
@@ -300,34 +287,106 @@ public class MNKPlayerTester {
 		}
 
 		if(VERBOSE) {
-			System.out.println("Game type : " + M + "," + N + "," + K);
+//			System.out.println("Game type : " + M + "," + N + "," + K);
 			System.out.println("Player1   : " + Player[0].playerName());
 			System.out.println("Player2   : " + Player[1].playerName());
 			System.out.println("Rounds    : " + ROUNDS);
 			System.out.println("Timeout   : " + TIMEOUT + " secs\n\n");
 		}
+		int P1SCORETOT = 0;
+		int P2SCORETOT = 0;
 
-		for(int i = 1; i <= ROUNDS; i++) {
-			if(VERBOSE) System.out.println("\n**** ROUND " + i + " ****");
-			initGame();
-			GameState state = runGame();
+		for (Match match : matchList) {
+			System.out.println(match);
+			int P1SCORE = 0;
+			int P2SCORE = 0;
+			for(int i = 0; i < ROUNDS*2; i++) {
+				// TODO: EDIT
+				if (i > 0) {
+					MNKPlayer temp = Player[0];
+					Player[0] = Player[1];
+					Player[1] = temp;
+					int t = P1SCORE;
+					P1SCORE = P2SCORE;
+					P2SCORE = t;
+				}
 
-			switch(state) {
-				case WINP1: P1SCORE += WINP1SCORE; break;
-				case WINP2: P2SCORE += WINP2SCORE; break;
-				case ERRP1: P2SCORE += ERRSCORE;   break;
-				case ERRP2: P1SCORE += ERRSCORE;   break;
-				case DRAW : P1SCORE += DRAWSCORE;
-					P2SCORE += DRAWSCORE;
-					break;
+				if(VERBOSE) System.out.println("\n**** ROUND " + i+1 + " ****");
+				initGame(match.M, match.N, match.K);
+				GameState state = runGame();
+
+				switch(state) {
+					case WINP1: P1SCORE += WINP1SCORE; break;
+					case WINP2: P2SCORE += WINP2SCORE; break;
+					case ERRP1: P2SCORE += ERRSCORE;   break;
+					case ERRP2: P1SCORE += ERRSCORE;   break;
+					case DRAW : P1SCORE += DRAWSCORE;
+								P2SCORE += DRAWSCORE;
+								break;
+				}
+
+				System.out.println("Game state    : " + state);
 			}
-			if(VERBOSE) {
-				System.out.println("\nGame state    : " + state);
-				System.out.println("Current score : " + Player[0].playerName() + " (" + P1SCORE + ") - " + Player[1].playerName() + " (" + P2SCORE + ")");
-			}
+			P1SCORETOT += P2SCORE;
+			P2SCORETOT += P1SCORE;
+			MNKPlayer temp = Player[0];
+			Player[0] = Player[1];
+			Player[1] = temp;
+			System.out.println("Current score : " +
+					Player[0].playerName() + " (" + P2SCORE + ") - " +
+					Player[1].playerName() + " (" + P1SCORE  + ") \t " +
+					Player[0].playerName() + " (" + P1SCORETOT + ") - " +
+					Player[1].playerName() + " (" + P2SCORETOT + ")");
 		}
-		if(VERBOSE) System.out.println("\n**** FINAL SCORE ****");
-		System.out.println(Player[0].playerName() + " " + P1SCORE);
-		System.out.println(Player[1].playerName() + " " + P2SCORE);
+//		if(VERBOSE) System.out.println("\n**** FINAL SCORE ****");
+//		System.out.println(Player[1].playerName() + " " + P2SCORE);
+//		System.out.println(Player[0].playerName() + " " + P1SCORE);
 	}
+
+	static Match[] matchList = {
+			new Match(3, 3, 3, "Patta"),
+			new Match(4, 3, 3, "Vittoria (Primo giocatore)"),
+			new Match(4, 4, 3, "Vittoria (Primo giocatore)"),
+			new Match(4, 4, 4, "Patta"),
+			new Match(5, 4, 4, "Patta"),
+			new Match(5, 5, 4, "Patta"),
+			new Match(5, 5, 5, "Patta"),
+			new Match(6, 4, 4, "Patta"),
+			new Match(6, 5, 4, "Vittoria (Primo giocatore)"),
+			new Match(6, 6, 4, "Vittoria (Primo giocatore)"),
+			new Match(6, 6, 5, "Patta"),
+			new Match(6, 6, 6, "Patta"),
+			new Match(7, 4, 4, "Patta"),
+			new Match(7, 5, 4, "Vittoria (Primo giocatore)"),
+			new Match(7, 6, 4, "Vittoria (Primo giocatore)"),
+			new Match(7, 7, 4, "Vittoria (Primo giocatore)"),
+			new Match(7, 5, 5, "Patta"),
+			new Match(7, 6, 5, "Patta"),
+			new Match(7, 7, 5, "Patta"),
+			new Match(7, 7, 6, "Patta"),
+			new Match(7, 7, 7, "?"),
+			new Match(8, 8, 4, "Vittoria (Primo giocatore)"),
+			new Match(10, 10, 5, "?"),
+			new Match(50, 50, 10, "?"),
+			new Match(70, 70, 10, "?")
+	};
+
+	static class Match {
+		public int M, N, K;
+		public String result;
+
+		public Match(int m, int n, int k, String result) {
+			M = m;
+			N = n;
+			K = k;
+			this.result = result;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("[%d, %d, %d, %s]", M, N, K, result);
+		}
+	}
+
+
 }
