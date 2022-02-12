@@ -33,7 +33,7 @@ public class AIHelper {
         this.transTable = new TranspositionTable(M, N, K);
     }
 
-    // O(n * √(m^d))
+    // O(√(n^d))
     public MNKCellEstimate alphabeta(MNKBoardEnhanced board, TreeSet<MNKCellEstimate> cells, int depth) throws TimeoutException {
         MNKCellEstimate bestCell = null;
         double bestEval = Double.NEGATIVE_INFINITY;
@@ -54,7 +54,7 @@ public class AIHelper {
         return bestCell;
     }
 
-    // O(√(m^d))
+    // O(√(n^d))
     private double alphabeta(MNKBoardEnhanced board, double estimate, boolean myNode, double a, double b, int depth) throws TimeoutException {
         // for debug
         numberOfCalls = numberOfCalls + 1;
