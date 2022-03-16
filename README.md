@@ -9,6 +9,14 @@ Il **goal** del progetto è sviluppare un giocatore software in grado di giocare
 - Classifica giocatori (M,N,K) al *16/03/22*: [click here](ClassificaASD2021.pdf)
 - (M,N,K)-game wiki: [click here](https://en.wikipedia.org/wiki/M,n,k-game)
 
+### Tecniche utilizzate
+- Alpha-Beta Pruning
+- Riduzione mosse giocabili
+- Ordinamento mosse tramite *TreeSet*
+- Transposition Table
+- Ricerca tramite board simmetriche
+- Iterative Deepening
+
 ## Build
 
 - Command-line compile:
