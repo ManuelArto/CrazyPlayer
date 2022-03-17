@@ -5,6 +5,7 @@ Progetto di Algoritmi e Strutture Dati, Unibo 21/22.
 Il **goal** del progetto è sviluppare un giocatore software in grado di giocare in modo ottimale a tutte le istanze possibili del **(M,N,K)-game**
 
 ### Link utili:
+- Package CrazyPlayer *(le altre classi sono state fornite dal docente)* : [click here](src/mnkgame/CrazyPlayer)
 - Relazione del progetto: [click here](Relazione%20Progetto%20Algoritmi%20A.A.%202020_2021.pdf)
 - Classifica giocatori (M,N,K) al *16/03/22*: [click here](ClassificaASD2021.pdf)
 - (M,N,K)-game wiki: [click here](https://en.wikipedia.org/wiki/M,n,k-game)
