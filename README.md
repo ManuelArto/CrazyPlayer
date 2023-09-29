@@ -5,7 +5,7 @@ Algorithms and Data Structures Project, UniBO 21/22.
 
 ## Introduction
 
-The primary goal of this project is to develop a software player capable of playing optimally in all possible instances of the **(M,N,K)-game**.
+The primary goal of this project is to develop a software player capable of playing optimally in all possible instances of the **M,N,K-game**.
 
 The problem is equivalent to solving a complex **Game tree**, and as the game grid increases, the resource load for genarating the game tree grows exponentially.
 
@@ -17,7 +17,7 @@ The entire development activity is contained within the *CrazyPlayer* package *(
 ## Resources:
 - Consult the project report: [click here](Relazione%20Progetto%20Algoritmi%20A.A.%202020_2021.pdf)
 - Ranking among the players made by students *(my player is CrazyPlayerPazzissimo)*: [click here](ClassificaASD2021.pdf)
-- (M,N,K)-game wiki: [click here](https://en.wikipedia.org/wiki/M,n,k-game)
+- M,N,K-game wiki: [click here](https://en.wikipedia.org/wiki/M,n,k-game)
 
 ## Techniques Used
 - Alpha-Beta Pruning
