@@ -44,7 +44,7 @@ os.system(COMMAND.format(first_player, enemy))
 # 24. (50, 50, 10, "?"),
 # 25. (70, 70, 10, "?")
 
-# CrazyPlayerPazzissimo vs ENEMY2
+# CrazyPlayer vs ENEMY2
 # NO DATE
 #   P1 = 2+2+2+2+1+0+2+1+2+2+2+2+1+2+2+2+2+2+1+2+2 = 36
 #   P2 = 2+2+2+2+3+5+2+3+2+2+2+2+3+2+2+2+2+2+3+2+2 = 49
@@ -77,7 +77,7 @@ os.system(COMMAND.format(first_player, enemy))
 #   P1 = 4+2+2+2+2+5+2+2+0+0+2+2+1+0+2+0+2+2+1+2+2+0+0+0+0 = 37
 #   P2 = 1+2+2+2+2+0+2+2+5+5+2+2+4+5+2+5+2+2+3+2+2+5+5+5+5 = 74
 
-# CrazyPlayerPazzissimo vs ENEMY1
+# CrazyPlayer vs ENEMY1
 # NO DATE
 #   P1 = 2+2+2+2+2+2+2+2+3+2+2+2+3+3+2+2+2+2+2+2+2 = 45
 #   P2 = 2+2+2+2+2+2+2+2+1+2+2+2+1+1+2+2+2+2+2+2+2 = 39

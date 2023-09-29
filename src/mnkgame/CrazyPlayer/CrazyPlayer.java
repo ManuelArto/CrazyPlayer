@@ -24,56 +24,57 @@ public class CrazyPlayer implements MNKPlayer {
 		board = new MNKBoardEnhanced(M, N, K);
 	}
 
-	@Override
-	public MNKCell selectCell(MNKCell[] FC, MNKCell[] MC) {
-		long start = System.currentTimeMillis();
-		ai.setStart(start);
+@Override
+public MNKCell selectCell(MNKCell[] firstCells, MNKCell[] markedCells) {
+	long startTime = System.currentTimeMillis();
+	ai.setStart(startTime);
 
-		if (MC.length > 0) {
-			// Recover the last move
-			MNKCell c = MC[MC.length - 1];
-			board.markCell(c.i, c.j);
-		} else {
-			// First to play
-			MNKCell middleCell = new MNKCell(M / 2, N / 2);
-			board.markCell(middleCell.i, middleCell.j);
-			return middleCell;
-		}
-
-		// Only one possible move
-		if (FC.length == 1)
-			return FC[0];
-
-		MNKCellEstimate bestCell = null;
-		int depth = 1;
-		try {
-			MNKCell[] closedCells = ai.getClosedCells(MC, board.getBoardState());
-			TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
-			if (debug) 	ai.showSelectedCells(cells, MC);
-			// Iterative Deepening
-			// O(n^d) con n = cells.size() e d = depth
-			for (; depth <= FC.length && depth <= AIHelper.DEPTH_LIMIT; depth++) {
-				if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE ||
-				   (ai.isTimeEnded()))
-					break;
-
-				MNKCellEstimate res = ai.alphabeta(board, cells, depth);
-				bestCell = res;
-			}
-		} catch (TimeoutException e) {
-//			e.printStackTrace();
-			for (int i = board.getFreeCells().length; i < FC.length; i++)
-				board.unmarkCell();
-		}
-
-		board.markCell(bestCell.i, bestCell.j);
-		if (debug) 	ai.printPassedTimeAndMessage(getInfos(bestCell, depth));
-
-		if (ai.canClearTT())
-			ai.clearTT();
-
-		return bestCell;
+	if (markedCells.length > 0) {
+		// Recover the last move
+		MNKCell lastMove = markedCells[markedCells.length - 1];
+		board.markCell(lastMove.i, lastMove.j);
+	} else {
+		// First to play
+		MNKCell middleCell = new MNKCell(M / 2, N / 2);
+		board.markCell(middleCell.i, middleCell.j);
+		return middleCell;
 	}
+
+	// Only one possible move
+	if (firstCells.length == 1)
+		return firstCells[0];
+
+	MNKCellEstimate bestCell = null;
+	int depth = 1;
+	try {
+		MNKCell[] closedCells = ai.getClosedCells(markedCells, board.getBoardState());
+		TreeSet<MNKCellEstimate> cells = ai.getBestMoves(closedCells, board, false);
+
+		if (debug) ai.showSelectedCells(cells, MC);
+
+		// Iterative Deepening
+		// O(n^d) con n = cells.size() e d = depth
+		for (; depth <= firstCells.length && depth <= AIHelper.DEPTH_LIMIT; depth++) {
+			if (bestCell != null && bestCell.getEstimate() == AIHelper.LARGE || (ai.isTimeEnded()))
+				break;
+
+			MNKCellEstimate result = ai.alphabeta(board, cells, depth);
+			bestCell = result;
+		}
+	} catch (TimeoutException e) {
+		for (int i = board.getFreeCells().length; i < firstCells.length; i++)
+			board.unmarkCell();
+	}
+
+	board.markCell(bestCell.i, bestCell.j);
+	
+	if (debug) ai.printPassedTimeAndMessage(getInfos(bestCell, depth));
+
+	if (ai.canClearTT())
+		ai.clearTT();
+
+	return bestCell;
+}
 
 	private String getInfos(MNKCellEstimate bestCell, int depth) {
 		return String.format("Number of calls: %d, Size of TT: %d \nBestCell: %s, Reached Depth: %d",
@@ -82,6 +83,6 @@ public class CrazyPlayer implements MNKPlayer {
 
 	@Override
 	public String playerName() {
-		return "CrazyPlayerPazzissimo";
+		return "CrazyPlayer";
 	}
 }
