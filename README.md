@@ -1,52 +1,67 @@
-# CrazyPlayerPazzissimo
+# CrazyPlayer
+<img src="logo.png" width=40%><br>
 
-Progetto di Algoritmi e Strutture Dati, Unibo 21/22.
+Algorithms and Data Structures Project, UniBO 21/22.
 
-Il **goal** del progetto è sviluppare un giocatore software in grado di giocare in modo ottimale a tutte le istanze possibili del **(M,N,K)-game**
+## Introduction
 
-### Link utili:
-- Package CrazyPlayer *(le altre classi sono state fornite dal docente)* : [click here](src/mnkgame/CrazyPlayer)
-- Relazione del progetto: [click here](Relazione%20Progetto%20Algoritmi%20A.A.%202020_2021.pdf)
-- Classifica giocatori (M,N,K) al *16/03/22*: [click here](ClassificaASD2021.pdf)
+The primary goal of this project is to develop a software player capable of playing optimally in all possible instances of the **(M,N,K)-game**.
+
+The problem is equivalent to solving a complex **Game tree**, and as the game grid increases, the resource load for genarating the game tree grows exponentially.
+
+To tackle this, various optimization techniques have been employed along with some heuristic functions. See [Techniques Used](#Techniques-Used).
+
+## Source Code
+The entire development activity is contained within the *CrazyPlayer* package *(other classes were provided by the instructor)*: [CrazyPlayer folder](src/mnkgame/CrazyPlayer)
+
+## Resources:
+- Consult the project report: [click here](Relazione%20Progetto%20Algoritmi%20A.A.%202020_2021.pdf)
+- Ranking among the players made by students *(my player is CrazyPlayerPazzissimo)*: [click here](ClassificaASD2021.pdf)
 - (M,N,K)-game wiki: [click here](https://en.wikipedia.org/wiki/M,n,k-game)
 
-### Tecniche utilizzate
+## Techniques Used
 - Alpha-Beta Pruning
-- Riduzione mosse giocabili
-- Ordinamento mosse tramite *TreeSet*
+- Reducing playable moves
+- Sorting moves using *TreeSet*
 - Transposition Table
-- Ricerca tramite board simmetriche
+- BitBoard
+- Searching through symmetric boards
 - Iterative Deepening
 
 ## Build
 
 - Command-line compile:
-
-      javac src/mnkgame/**/*.java -d bin/mnkgame
+	```bash
+	javac src/mnkgame/**/*.java -d bin/mnkgame
+	```
 
 ## Run
 
 ### MNKGame application:
 
 - Human vs Computer:
-	
-		java -cp bin/mnkgame mnkgame.MNKGame 3 3 3 mnkgame.CrazyPlayer.CrazyPlayer
+	```bash
+	java -cp bin/mnkgame mnkgame.MNKGame 3 3 3 mnkgame.CrazyPlayer.CrazyPlayer
+	```
 
 - Computer vs Computer:
-
-		java -cp bin/mnkgame mnkgame.MNKGame 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer
-
+	```bash
+	java -cp bin/mnkgame mnkgame.MNKGame 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer
+	```
 
 ### MNKPlayerTester application:
 
 - Output score only:
-
-        java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer
+	```bash
+	java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer
+	```
 
 - Verbose output:
+	```bash
+	java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer -v
+	```
 
-        java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer -v
-
-- Verbose output and customized timeout (1 sec) and number of game repetitions (10 rounds)
-
-        java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer -v -t 1 -r 10
+- Verbose output with customized timeout (1 sec) and number of game repetitions (10 rounds):
+	```bash
+	java -cp bin/mnkgame mnkgame.MNKPlayerTester 5 5 4 mnkgame.CrazyPlayer.CrazyPlayer mnkgame.QuasiRandomPlayer -v -t 1 -r 10
+	```
